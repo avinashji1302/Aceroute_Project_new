@@ -101,6 +101,8 @@ class _PartScreenState extends State<PartScreen> {
               onDismissed: (direction) async {
                 if (direction == DismissDirection.startToEnd) {
                   // Swipe Right -> Open AddPart page in Update Mode
+                  print("order.id edit onlinde mode::::");
+                  print(order.id);
                   controller.AddPartCategories();
                   Get.to(() => AddPart(
                       oid: order.oid, // Pass the necessary data
@@ -115,6 +117,8 @@ class _PartScreenState extends State<PartScreen> {
                   });
                 } else if (direction == DismissDirection.endToStart) {
                   // Swipe Left -> Call Delete Function
+                  print("order.id");
+                  print(order.id);
                   await controller.DeletePart(order.id);
                   setState(() {
                     controller.orderPartsList.remove(order); // Remove from UI

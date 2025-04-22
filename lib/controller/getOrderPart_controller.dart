@@ -26,6 +26,45 @@ class GetOrderPartController extends GetxController {
 
   String categoryId = "";
 
+  // Future<void> syncOfflineActions() async {
+  //   if (networkController.isOnline.value == false) return;
+
+  //   final unsynced = await OrderPartSyncTable.getUnsynced();
+
+  //   for (var item in unsynced) {
+  //     final id = item['id'] as int;
+  //     final action = item['action'] as String;
+  //     final oid = item['order_id'] as String;
+  //     final sku = item['sku'] as String;
+  //     final qty = item['qty'] as String;
+  //     final tid = item['tid'] as String;
+
+  //     try {
+  //       if (action == 'save' || action == 'edit') {
+  //         final saveUrl =
+  //             "https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=saveorderpart&oid=$oid&id=0&tid=$tid&qty=$qty&sku=$sku&stmp=333242323";
+
+  //         final response = await http.get(Uri.parse(saveUrl));
+  //         if (response.statusCode == 200) {
+  //           await OrderPartSyncTable.markSynced(id);
+  //         }
+  //       } else if (action == 'delete') {
+  //         final deleteUrl =
+  //             "https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=deleteorderpart&id=$sku"; // Assuming `sku` is used as id here
+  //         final response = await http.get(Uri.parse(deleteUrl));
+  //         if (response.statusCode == 200) {
+  //           await OrderPartSyncTable.markSynced(id);
+  //         }
+  //       }
+  //     } catch (e) {
+  //       print('❌ Sync failed for $action -> $e');
+  //     }
+  //   }
+
+  //   // Refresh UI
+  //   await GetOrderPartFromDb(unsynced.first['order_id']);
+  // }
+
   Future<void> fetchOrderData(String oid) async {
     print("inside fetch");
     try {
@@ -103,12 +142,12 @@ class GetOrderPartController extends GetxController {
       //chatgpt..........
 
       // Fetch order parts from the database
-      final List<OrderParts> dbOrders =
+      final List<OrderParts> dbOrder =
           await GetOrderPartTable.fetchDataByOid(oid);
-      if (dbOrders.isNotEmpty) {
-        orderPartsList.assignAll(dbOrders);
-        //   partTypeDataList.clear(); // Clear the list before refreshing
-        for (var data in dbOrders) {
+      if (dbOrder.isNotEmpty) {
+        orderPartsList.assignAll(dbOrder);
+
+        for (var data in dbOrder) {
           List<PartTypeDataModel> fetchedPartTypeList =
               await PartTypeDataTable.fetchPartTypeAllDataById(data.tid);
 
@@ -122,7 +161,7 @@ class GetOrderPartController extends GetxController {
           }
         }
 
-        print("orders data is ::: ${dbOrders.length}");
+        print("orders data is ::: ${dbOrder.length}");
       } else {
         print('No order parts found in the database.');
       }
@@ -139,7 +178,7 @@ class GetOrderPartController extends GetxController {
         await PartTypeDataTable.fetchPartTypeData();
 
     for (var data in allPartTypeData) {
-      print(data.name);
+      print(data.id);
       categories.add(data.name);
     }
   }
@@ -153,15 +192,24 @@ class GetOrderPartController extends GetxController {
       String category,
       String quantity,
       String sku,
-      String oid) async {
+      String oid,
+      {bool fromSync = false}) async {
     if (networkController.isOnline.value == false) {
       OrderPartSyncTable.insert(
-          orderId: oid, action: 'save', sku: sku, qty: quantity, tid: category);
+          orderId: oid,
+          action: 'save',
+          sku: sku,
+          qty: quantity,
+          tid: categoryId);
 
       print("INternet id off lets what happedns");
 
       GetOrderPartFromDb(oid);
+      // here add categoryId ,quantity,sku, and oid in partTypeDataList at th
 
+      print(fromSync);
+
+      // Get.back();
       return;
     }
 
@@ -221,15 +269,20 @@ class GetOrderPartController extends GetxController {
   //Delete the part
 
   Future<void> DeletePart(String id) async {
+    if (networkController.isOnline.value == false) {
+      print("deleting offline $id");
 
-     if (networkController.isOnline.value == false) {
-      
+      await OrderPartSyncTable.insert(
+        orderId: id,
+        action: 'delete',
+      );
+
+      print("deleted offline $id");
+
+      GetOrderPartTable.deleteById(id);
+      GetOrderPartFromDb(id);
       return;
     }
-
-
-
-
 
     final url =
         "https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=deleteorderpart&id=$id";
@@ -238,6 +291,8 @@ class GetOrderPartController extends GetxController {
     if (response.statusCode == 200) {
       print("Deleted Successfully ${response.statusCode}");
       GetOrderPartTable.deleteById(id);
+      print("deleted id is $id");
+      GetOrderPartFromDb(id);
       print(response.body);
     }
   }
@@ -255,7 +310,7 @@ class GetOrderPartController extends GetxController {
 
       // Refresh the data
       await GetOrderPartFromDb(oId);
-      partTypeDataList.clear(); // Clear the list before refreshing
+      //  partTypeDataList.clear(); // Clear the list before refreshing
       for (var data in orderPartsList) {
         List<PartTypeDataModel> fetchedPartTypeList =
             await PartTypeDataTable.fetchPartTypeAllDataById(data.tid);

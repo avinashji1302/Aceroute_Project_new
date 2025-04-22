@@ -66,6 +66,8 @@ class NetworkController extends GetxController {
       if (canSync) {
         await _syncData();
         await _syncVehicleData();
+        await _syncOrderParts();
+        print("🔄 Syncing data...");
       } else {
         print("⚠️ Skipping sync — login not completed.");
       }
@@ -124,6 +126,8 @@ class NetworkController extends GetxController {
     final GetOrderPartController getOrderPartController =
         Get.find<GetOrderPartController>();
 
+    print("inside sync order part");
+
     try {
       List<Map<String, dynamic>> unsyncedData =
           await OrderPartSyncTable.getUnsynced();
@@ -132,13 +136,13 @@ class NetworkController extends GetxController {
         final String action = data['action'];
         final String orderId = data['order_id'];
 
+        print(
+            "🧾 Syncing action=$action | order_id=$orderId | id=${data['id']}");
+
         if (action == 'save') {
           await getOrderPartController.SaveOrderPart(
-            data['tid'],
-            data['qty'],
-            data['sku'],
-            orderId,
-          );
+              data['tid'], data['qty'], data['sku'], orderId,
+              fromSync: true);
         } else if (action == 'edit') {
           // await YourOrderPartController.updateOrderPartAPI(
           //   orderId: orderId,
@@ -147,17 +151,24 @@ class NetworkController extends GetxController {
           //   tid: data['tid'],
           // );
         } else if (action == 'delete') {
-          // await YourOrderPartController.deleteOrderPartAPI(
-          //   orderId: orderId,
-          //   sku: data['sku'],
-          // );
+          print("deleting  orderId $orderId  id   ${data['id']}");
+          await getOrderPartController.DeletePart(
+            orderId,
+          );
+        }else{
+          print("Unknown action: $action");
         }
 
         await OrderPartSyncTable.markSynced(data['id']);
+
+        print("synced order successfully");
+        print("✅ Order part data synced for order_id: $orderId");
       }
     } catch (e) {
       print("❌ Error syncing order part data: $e");
     }
+
+    print(".............");
   }
 
   /// Call this method **after login is complete** to allow syncing
