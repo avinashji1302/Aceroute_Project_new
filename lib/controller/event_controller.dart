@@ -51,6 +51,10 @@ class EventController extends GetxController {
   var priorityId = <String, String?>{}.obs;
   var priorityColorsId = <String, String?>{}.obs;
 
+
+  //---------------------------
+  DateTime? selectedDate; // null means default to today
+
   @override
   void onInit() async {
     super.onInit();
@@ -103,7 +107,7 @@ class EventController extends GetxController {
 
   Future<void> fetchEvents() async {
     //print("object");
-    DateTime currentDate = DateTime.now();
+    DateTime currentDate =selectedDate?? DateTime.now();
     DateTime secondDate = currentDate.add(Duration(days: daysToAdd));
     String formattedCurrentDate = DateFormat('yyyy-MM-dd').format(currentDate);
     String formattedSecondDate = DateFormat('yyyy-MM-dd').format(secondDate);
@@ -214,6 +218,8 @@ class EventController extends GetxController {
       List<Event> localEvents = await EventTable.fetchEvents();
       events.assignAll(localEvents);
       //  //print("Loaded ${localEvents.length} events from database");
+
+      
 
       // Extract unique wkf and tid values
       Set<String> wkfSet = localEvents.map((event) => event.wkf).toSet();

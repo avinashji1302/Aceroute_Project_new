@@ -1,3 +1,4 @@
+import 'package:ace_routes/controller/event_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -15,6 +16,7 @@ class _DatePickerDialogState extends State<DatePickerDialog> {
   int? _selectedMonth;
   DateTime? _selectedDate;
   final fontSizeController = Get.find<FontSizeController>();
+  final eventController = Get.find<EventController>(); // your actual controlle
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +89,7 @@ class _DatePickerDialogState extends State<DatePickerDialog> {
               Navigator.of(context).pop();
             }
           },
-          child: Text('OK'),
+          child: Text('OK.'),
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),

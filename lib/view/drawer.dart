@@ -1,3 +1,4 @@
+import 'package:ace_routes/controller/event_controller.dart';
 import 'package:ace_routes/controller/homeController.dart';
 import 'package:ace_routes/controller/loginController.dart';
 import 'package:ace_routes/database/databse_helper.dart';
@@ -21,6 +22,8 @@ import '../controller/fontSizeController.dart';
 
 class DrawerWidget extends StatelessWidget {
   DrawerWidget({Key? key}) : super(key: key);
+
+  final eventController = Get.find<EventController>();
 
   Future<void> _openGoogleMaps() async {
     loc.Location location = loc.Location();
@@ -123,6 +126,8 @@ class DrawerWidget extends StatelessWidget {
               ),
             ),
             onTap: () async {
+              
+              eventController.fetchEvents();
               print('sync now');
               Navigator.pop(context);
 
@@ -148,7 +153,7 @@ class DrawerWidget extends StatelessWidget {
             ),
             onTap: () {
               _showAboutDialog(context);
-            // showAboutDialog(context: context);
+              // showAboutDialog(context: context);
             },
           ),
           Divider(
@@ -211,6 +216,7 @@ class DrawerWidget extends StatelessWidget {
             ),
             onTap: () {
               showDatePickerDialog(context);
+              // Navigator.pop(context);
             },
           ),
           Divider(
