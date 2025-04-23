@@ -95,7 +95,9 @@ class _AddPartState extends State<AddPart> {
                 print("edit");
               }
 
-              Get.back(result: true);
+             
+               
+             Get.back(result: true);
             },
           ),
         ],

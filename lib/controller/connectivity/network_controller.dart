@@ -135,27 +135,26 @@ class NetworkController extends GetxController {
       for (var data in unsyncedData) {
         final String action = data['action'];
         final String orderId = data['order_id'];
+        final String partId = data['part_id'] ?? '';
 
         print(
-            "🧾 Syncing action=$action | order_id=$orderId | id=${data['id']}");
+            "🧾 Syncing action=$action | order_id=$orderId | id=${data['id']}  $partId");
 
         if (action == 'save') {
           await getOrderPartController.SaveOrderPart(
               data['tid'], data['qty'], data['sku'], orderId,
               fromSync: true);
         } else if (action == 'edit') {
-          // await YourOrderPartController.updateOrderPartAPI(
-          //   orderId: orderId,
-          //   sku: data['sku'],
-          //   quantity: data['qty'],
-          //   tid: data['tid'],
-          // );
+          print("editing  orderId $orderId  id   ${data['id']}");
+          await getOrderPartController.EditPart(
+              partId, orderId, data['tid'], data['qty'], data['sku'],
+              fromSync: true);
         } else if (action == 'delete') {
           print("deleting  orderId $orderId  id   ${data['id']}");
           await getOrderPartController.DeletePart(
             orderId,
           );
-        }else{
+        } else {
           print("Unknown action: $action");
         }
 

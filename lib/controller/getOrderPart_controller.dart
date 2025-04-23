@@ -204,13 +204,38 @@ class GetOrderPartController extends GetxController {
 
       print("INternet id off lets what happedns");
 
-      GetOrderPartFromDb(oid);
-      // here add categoryId ,quantity,sku, and oid in partTypeDataList at th
+// 🔥 Manually create OrderParts and insert into local DB
+      final newOfflinePart = OrderParts(
+        id: DateTime.now().millisecondsSinceEpoch.toString(), // temp ID
+        oid: oid,
+        tid: categoryId,
+        sku: sku,
+        qty: quantity,
+        upd: '', // you can leave blank or add local timestamp
+        by: 'local', // mark as local if needed
+      );
 
-      print(fromSync);
+      await GetOrderPartTable.insertData(newOfflinePart);
+      print('Inserted locally (offline): ${newOfflinePart.toJson()}');
 
-      // Get.back();
+      // 📌 Refresh the UI
+      await GetOrderPartFromDb(oid);
+
+      // ✅ Optional: go back to the previous screen if needed
+      // if (!fromSync) {
+      //   print("coming back lame");
+      //   Get.back();
+      // }
+
       return;
+
+      // GetOrderPartFromDb(oid);
+      // // here add categoryId ,quantity,sku, and oid in partTypeDataList at th
+
+      // print(fromSync);
+
+      // // Get.back();
+      // return;
     }
 
     print("$categoryId ${sku} ${quantity}");
@@ -298,7 +323,27 @@ class GetOrderPartController extends GetxController {
   }
 
   Future<void> EditPart(
-      String id, String oId, String tid, String quantity, String sku) async {
+      String id, String oId, String tid, String quantity, String sku,
+      {bool fromSync = false}) async {
+    if (networkController.isOnline.value == false) {
+      print("deleting offline $id");
+
+      await OrderPartSyncTable.insert(
+          orderId: oId,
+          action: 'edit',
+          sku: sku,
+          qty: quantity,
+          tid: tid,
+          partId: id);
+
+      print("edited offline $id  $oId");
+
+      // GetOrderPartFromDb(oId);
+      return;
+    }
+
+    print("edited offline $id  $oId ${tid}r $quantity $sku");
+
     final url =
         "https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=saveorderpart&oid=$oId&id=$id&tid=$tid&qty=$quantity&sku=$sku&stmp=333242323";
     final response = await http.get(Uri.parse(url));

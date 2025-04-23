@@ -13,6 +13,7 @@ class OrderPartSyncTable {
         sku TEXT,
         qty TEXT,
         tid TEXT,
+        part_id TEXT,
         synced INTEGER DEFAULT 0
       )
     ''');
@@ -25,6 +26,7 @@ class OrderPartSyncTable {
     String? sku,
     String? qty,
     String? tid,
+    String? partId,
   }) async {
     final db = await DatabaseHelper().database;
 
@@ -36,7 +38,9 @@ class OrderPartSyncTable {
         'sku': sku ?? '',
         'qty': qty ?? '',
         'tid': tid ?? '',
+        'part_id':partId?? '',
         'synced': 0,
+         // Assuming parti_id is not provided in this context
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
