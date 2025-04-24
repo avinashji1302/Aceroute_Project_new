@@ -8,12 +8,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:ace_routes/controller/status_updated_controller.dart';
-import 'package:ace_routes/database/offlineTables/status_sync_table.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-
 class NetworkController extends GetxController {
   final Connectivity _connectivity = Connectivity();
   RxBool isOnline = true.obs;
@@ -179,5 +173,22 @@ class NetworkController extends GetxController {
       _syncVehicleData();
       _syncOrderParts();
     }
+  }
+
+  void syncAll() async {
+    if (!canSync) {
+      print("⚠️ Cannot sync. Sync not enabled.");
+      return;
+    }
+
+    if (!isOnline.value) {
+      print("🚫 Cannot sync. No internet.");
+      return;
+    }
+
+    print("🔁 Manual sync initiated.");
+    await _syncData();
+    await _syncVehicleData();
+    await _syncOrderParts();
   }
 }

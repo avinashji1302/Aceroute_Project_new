@@ -27,7 +27,7 @@ class HomeController extends GetxController {
   void onInit() async {
     super.onInit();
     print("🚀 Initializing PubNub...");
-     // await _pubnubInitialize();
+    await _pubnubInitialize();
   }
 
   Future<void> _pubnubInitialize() async {

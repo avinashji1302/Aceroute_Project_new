@@ -1,3 +1,4 @@
+import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/controller/event_controller.dart';
 import 'package:ace_routes/controller/homeController.dart';
 import 'package:ace_routes/controller/loginController.dart';
@@ -24,6 +25,7 @@ class DrawerWidget extends StatelessWidget {
   DrawerWidget({Key? key}) : super(key: key);
 
   final eventController = Get.find<EventController>();
+  final NetworkController networkController = Get.find<NetworkController>();
 
   Future<void> _openGoogleMaps() async {
     loc.Location location = loc.Location();
@@ -126,7 +128,16 @@ class DrawerWidget extends StatelessWidget {
               ),
             ),
             onTap: () async {
-              
+              // ✅ Trigger sync manually
+
+              // Enable sync flag in case it was disabled
+              networkController.canSync = true;
+
+              // Then call the sync methods
+              Get.find<NetworkController>().syncAll();
+            //  Get.deleteAll();
+              print("🔁 Manual sync triggered");
+
               eventController.fetchEvents();
               print('sync now');
               Navigator.pop(context);

@@ -1,18 +1,23 @@
+import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/controller/event_controller.dart';
 import 'package:ace_routes/controller/orderNoteConroller.dart';
 import 'package:ace_routes/controller/vehicle_controller.dart';
 import 'package:ace_routes/core/colors/Constants.dart';
 import 'package:ace_routes/database/Tables/event_table.dart';
+import 'package:ace_routes/view/login_screen.dart';
 import 'package:get/get.dart';
 import 'package:pubnub/pubnub.dart';
 import 'package:xml/xml.dart';
 
-class PubNubService {
+class PubNubService extends GetxController {
   late final PubNub pubnub;
   late final Subscription subscription;
   final String userId;
   final String namespace;
   final String subscriptionKey;
+
+  final eventController = Get.find<EventController>();
+  final NetworkController networkController = Get.find<NetworkController>();
 
   PubNubService({
     required this.userId,
@@ -87,7 +92,7 @@ class PubNubService {
               print("🗑️ Deleting Order: $msgUserId");
               // Implement delete logic if needed
               EventTable().deleteEvent(msgUserId);
-                Get.find<EventController>().loadEventsFromDatabase();
+              Get.find<EventController>().loadEventsFromDatabase();
             }
 
             final ridFromXml = _extractXmlValue(xml, 'rid');
@@ -111,16 +116,29 @@ class PubNubService {
 
             break;
 
-          case '27':
-            print("🔄 Order Status Updated");
+          case '58':
+            print("🔄 Forced Logout");
+
+            // EventTable.clearEvents();
+            Get.deleteAll();
+            Get.to(() => const LoginScreen());
             break;
 
-          case '24':
-            print("🔄 Gen type");
+          case '54':
+            print("🔄 Revoked");
+            Get.deleteAll();
+            Get.to(() => const LoginScreen());
             break;
 
-          case '9':
-            print("🔄 Worker");
+          case '59':
+            print("🔄 sync");
+            // Enable sync flag in case it was disabled
+            networkController.canSync = true;
+
+            // Then call the sync methods
+            Get.find<NetworkController>().syncAll();
+            print("🔁 Manual sync triggered");
+
             break;
 
           case '6':
