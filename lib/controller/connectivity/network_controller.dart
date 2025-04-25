@@ -175,7 +175,7 @@ class NetworkController extends GetxController {
     }
   }
 
-  void syncAll() async {
+  Future<void> syncAll() async {
     if (!canSync) {
       print("⚠️ Cannot sync. Sync not enabled.");
       return;

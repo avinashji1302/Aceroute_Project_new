@@ -10,7 +10,7 @@ void main() async {
   Get.put(FontSizeController());
   runApp(const MyApp());
   DependecyInjection.init();
-  // await NotificationService.init();
+   //await NotificationService.init();
 }
 
 class MyApp extends StatelessWidget {

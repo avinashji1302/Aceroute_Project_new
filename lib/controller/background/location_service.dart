@@ -1,7 +1,11 @@
- import 'dart:async'; 
+import 'dart:async';
 import 'dart:convert';
+import 'package:ace_routes/controller/connectivity/network_controller.dart';
+import 'package:ace_routes/controller/event_controller.dart';
 import 'package:ace_routes/model/event_model.dart';
 import 'package:ace_routes/model/login_model/token_api_response.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ace_routes/core/colors/Constants.dart';
 import 'package:ace_routes/database/Tables/api_data_table.dart';
@@ -12,11 +16,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart' as xml;
 
-
 // Global Variables
 String locChangeThreshold = "10"; // Default
 String syncIntervalMinutes = "10"; // Default
 List<Map<String, String>> locationData = [];
+
+final networkController = Get.find<NetworkController>();
+final EventController event = Get.find<EventController>();
 
 // ✅ **1. Load Data from SQLite & Save to SharedPreferences**
 Future<void> fetchDataFromLogin() async {
@@ -103,6 +109,21 @@ void onStart(ServiceInstance service) async {
     await _startLocationUpdates();
     await _sendDataToServer();
   });
+
+  await _waitUntilMidnight();
+  //these two runs exactly at 12am in  night for sync and fetch current data automatically
+  await networkController.syncAll();
+  await event.fetchEvents();
+}
+
+// ⏰ Wait until 12:00 AM
+Future<void> _waitUntilMidnight() async {
+  final now = DateTime.now();
+  final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+  final durationUntilMidnight = nextMidnight.difference(now);
+
+  print("⏳ Waiting until midnight (${nextMidnight.toLocal()})");
+  await Future.delayed(durationUntilMidnight);
 }
 
 // ✅ **4. Start Location Updates**
@@ -191,7 +212,8 @@ Future<void> _sendDataToServer() async {
       var success = document.findAllElements('success').first.innerText;
       var id = document.findAllElements('id').first.innerText;
 
-      print("✅ Location data synced successfully: Success = $success, ID = $id");
+      print(
+          "✅ Location data synced successfully: Success = $success, ID = $id");
     } else {
       print("❌ Failed to sync data: ${response.body}");
     }

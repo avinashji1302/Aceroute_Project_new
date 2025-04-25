@@ -1,30 +1,42 @@
 // import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:get/get.dart';
 
-// class NotificationService {
-//   static final _notifications = FlutterLocalNotificationsPlugin();
+// late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+// RxBool isAppInBackground = false.obs;
 
-//   static Future<void> init() async {
-//     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-//     const initSettings = InitializationSettings(android: androidInit);
+// void initializeNotifications() {
+//   flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-//     await _notifications.initialize(initSettings);
-//   }
+//   const AndroidInitializationSettings initializationSettingsAndroid =
+//       AndroidInitializationSettings('@mipmap/ic_launcher');
 
-//   static Future<void> showNotification({
-//     required String title,
-//     required String body,
-//     int id = 0,
-//   }) async {
-//     const androidDetails = AndroidNotificationDetails(
-//       'pubnub_channel',
-//       'PubNub Notifications',
-//       importance: Importance.max,
-//       priority: Priority.high,
-//       playSound: true,
-//     );
+//   const InitializationSettings initializationSettings = InitializationSettings(
+//     android: initializationSettingsAndroid,
+//   );
 
-//     const notificationDetails = NotificationDetails(android: androidDetails);
+//   flutterLocalNotificationsPlugin.initialize(
+//     initializationSettings,
+//   );
+// }
 
-//     await _notifications.show(id, title, body, notificationDetails);
-//   }
+// void showLocalNotification(String title, String body) async {
+//   const AndroidNotificationDetails androidPlatformChannelSpecifics =
+//       AndroidNotificationDetails(
+//     'pubnub_channel_id',
+//     'PubNub Notifications',
+//     channelDescription: 'Notifications from PubNub',
+//     importance: Importance.max,
+//     priority: Priority.high,
+//     ticker: 'ticker',
+//   );
+
+//   const NotificationDetails platformChannelSpecifics =
+//       NotificationDetails(android: androidPlatformChannelSpecifics);
+
+//   await flutterLocalNotificationsPlugin.show(
+//     0,
+//     title,
+//     body,
+//     platformChannelSpecifics,
+//   );
 // }
