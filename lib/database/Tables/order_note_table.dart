@@ -40,8 +40,32 @@ class OrderNoteTable {
     final List<Map<String, dynamic>> maps = await db.query(tableName);
     return List.generate(
       maps.length,
-          (i) => OrderNoteModel.fromMap(maps[i]),
+      (i) => OrderNoteModel.fromMap(maps[i]),
     );
+  }
+
+  static Future<void> updateOrderNoteData(String newData) async {
+    final db = await DatabaseHelper().database;
+
+    try {
+      // Perform the update
+      int result = await db.update(
+        tableName,
+        {'data': newData}, // Only updating the "data" field
+        where: 'id = ?',
+        whereArgs: [1], // Assuming your record ID is 1
+      );
+      // Check the result and debug
+      if (result > 0) {
+        print('Update successful: $newData'); // Success message
+      } else {
+        print(
+            'No rows updated. Please check the ID or data.'); // If no rows are updated
+      }
+    } catch (e) {
+      // Catch and print any errors
+      print('Error updating data: $e');
+    }
   }
 
   // Clear all records

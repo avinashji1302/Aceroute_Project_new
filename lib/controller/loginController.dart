@@ -30,6 +30,11 @@ import '../core/xml_to_json_converter.dart';
 class LoginController extends GetxController {
   final allTermsController = Get.put(AllTermsController());
 
+  TextEditingController accountNameController =
+      TextEditingController(); // ✅ Added
+  TextEditingController workerIdController = TextEditingController(); // ✅ Added
+  TextEditingController passController = TextEditingController(); // ✅ Added
+
   var accountName = ''.obs;
   var workerId = ''.obs;
   var password = ''.obs;
@@ -136,7 +141,7 @@ class LoginController extends GetxController {
       if (response.statusCode == 200) {
         final jsonResponse = xmlToJson(response.body);
 
-         print('Parsed JSON Response: $jsonResponse');
+        print('Parsed JSON Response: $jsonResponse');
 
         // Parse response into ApiResponse model and store in database
         TokenApiReponse apiResponse = TokenApiReponse(
@@ -157,7 +162,6 @@ class LoginController extends GetxController {
 
         await ApiDataTable.insertData(apiResponse);
         print(' User Data successfully stored in the database.');
-       
 
         await checkTheLatestVersion(baseUrl);
       } else {
@@ -271,7 +275,9 @@ class LoginController extends GetxController {
           // await displayDataFromDb();
 
           Get.to(() => HomeScreen());
-
+          accountNameController.clear();
+          workerIdController.clear();
+          passController.clear();
           // Database is here storeing the data
         } else {
           print('App is up to date.');

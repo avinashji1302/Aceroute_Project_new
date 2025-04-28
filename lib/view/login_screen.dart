@@ -62,6 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     // Account Name Field
                     Obx(() => TextField(
+                          controller: loginController.accountNameController,
                           onChanged: (value) {
                             loginController.accountName.value = value;
                           },
@@ -85,6 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16.0),
                     // Worker ID Field
                     Obx(() => TextField(
+                          controller: loginController.workerIdController,
                           keyboardType: TextInputType.number,
                           onChanged: (value) {
                             loginController.workerId.value = value;
@@ -109,6 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16.0),
                     // Password Field with Eye Icon
                     Obx(() => TextField(
+                          controller: loginController.passController,
                           onChanged: (value) {
                             loginController.password.value = value;
                           },

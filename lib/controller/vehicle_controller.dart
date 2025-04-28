@@ -3,6 +3,7 @@ import 'package:ace_routes/database/Tables/order_note_table.dart';
 import 'package:ace_routes/database/offlineTables/vehicle_sync_table.dart';
 import 'package:ace_routes/model/order_note_model.dart';
 import 'package:ace_routes/view/home_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../core/colors/Constants.dart';
 import '../database/Tables/event_table.dart';
@@ -121,8 +122,9 @@ class VehicleController extends GetxController {
     print(
         "wkf for ccccedit: ${wkf} $nm  ${vehicleDetail.value} ${notes.value}");
     EventTable.updateVehicle(id, updatedData);
+    OrderNoteTable.updateOrderNoteData(updatedData['notes']!);
     eventController.loadEventsFromDatabase();
-    print("something :::");
+    print("update note::: ${updatedData['notes']}");
     if (networkController.isOnline.value == false) {
       print("User is offline so updaing in database");
       VehicleSyncTable.insert(id, updatedData);
