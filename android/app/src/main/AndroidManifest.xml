@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
@@ -22,10 +22,18 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
-        <service
+        <!-- <service
             android:name="com.example.YourAppName.BackgroundService"
             android:foregroundServiceType="location"
-            android:permission="android.permission.FOREGROUND_SERVICE" />
+            android:permission="android.permission.FOREGROUND_SERVICE" /> -->
+
+            <!-- 🔥 FIXED the service name and added all needed types -->
+        <service
+            android:name="id.flutter.flutter_background_service.BackgroundService"
+            android:exported="false"
+            android:foregroundServiceType="location|dataSync|mediaPlayback|connectedDevice"
+            android:permission="android.permission.FOREGROUND_SERVICE"
+            tools:replace="android:exported" /> <!-- 🔥 Added here -->
 
         <activity
             android:name=".MainActivity"
