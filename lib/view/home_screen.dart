@@ -674,6 +674,73 @@ class _HomeScreenState extends State<HomeScreen> {
           : Container(
               child: MapScreen(),
             ),
+      bottomNavigationBar: Obx(() => BottomNavigationBar(
+            items: <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(Icons.mail_rounded, size: 30),
+                label: 'Inbox',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.location_on_outlined, size: 30),
+                label: 'Map',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.watch_later_outlined, size: 30),
+                label: tapped ? 'Clocked In' : "Clocked Out",
+              ),
+            ],
+            currentIndex: homeController.selectedIndex.value,
+            selectedItemColor: Colors.amber[800],
+            unselectedItemColor: Colors.grey,
+            backgroundColor: Colors.blueAccent[300],
+            selectedLabelStyle:
+                TextStyle(fontSize: fontSizeController.fontSize),
+            unselectedLabelStyle:
+                TextStyle(fontSize: fontSizeController.fontSize * 0.9),
+            onTap: (index) {
+              setState(() {
+                if (index == 0) {
+                  _showCard = true; // Show card
+                } else if (index == 1) {
+                  // Map tab
+
+                  _showCard = false; // Hide card
+
+                  homeController.getCurrentLocation();
+                } else if (index == 2) {
+                  // Clocked In tab
+                  //  _showCard = false; // Hide card
+                  print('object');
+                  tapped = !tapped;
+                  // Find the first two events whose status is NOT "Completed"
+                  List<String> nonCompletedEventIds = eventController.events
+                      .where((event) =>
+                          eventController.nameMap[event.wkf] != "Completed")
+                      .map((event) => event.id)
+                      .take(2)
+                      .toList();
+
+                  String? lstoid = nonCompletedEventIds.isNotEmpty
+                      ? nonCompletedEventIds[0]
+                      : null;
+                  String? nxtoid = nonCompletedEventIds.length > 1
+                      ? nonCompletedEventIds[1]
+                      : null;
+
+                  // Execute action with filtered event IDs
+                  clockOut.executeAction(
+                      lstoid: lstoid, nxtoid: nxtoid, tid: tapped ? 1 : 2);
+
+                  print("clocked in lstoid  $lstoid  nxtoid $nxtoid  ");
+
+                  // clockOut.executeAction(tid: tapped ? 1 : 2);
+
+                  print("clocked in   $tapped");
+                }
+              });
+              homeController.onItemTapped(index);
+            },
+          )),
     );
   }
 }
