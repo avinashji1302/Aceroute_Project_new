@@ -132,7 +132,7 @@ class LoginController extends GetxController {
       BuildContext context, String baseUrl, String nsp) async {
     try {
       final String fetchUrl =
-          'https://$baseUrl/mobi?&geo=0.0,0.0&os=2&pcode=${password.value}&nspace=${accountName}&action=mlogin&rid=${workerId.value}&cts=1728382466217';
+          'https://$baseUrl/mobi?&geo=$geo&os=2&pcode=${password.value}&nspace=${accountName}&action=mlogin&rid=${workerId.value}&cts=1728382466217';
 
       print("Step-2 Login  User Api URL: $fetchUrl");
 
@@ -273,7 +273,7 @@ class LoginController extends GetxController {
           // Show the update dialog if an update is available
           // Get.dialog(UpdateDialog(onUpdate: _navigateToPlayStore));
           // await displayDataFromDb();
-
+          print("geo tokenn rid $rid $geo $token");
           Get.to(() => HomeScreen());
           accountNameController.clear();
           workerIdController.clear();

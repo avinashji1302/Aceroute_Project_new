@@ -14,6 +14,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:location/location.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:xml/xml.dart' as xml;
 
@@ -51,9 +52,11 @@ class EventController extends GetxController {
   var priorityId = <String, String?>{}.obs;
   var priorityColorsId = <String, String?>{}.obs;
 
-
   //---------------------------
   DateTime? selectedDate; // null means default to today
+
+  //---------location for clockedin
+  Location location = new Location();
 
   @override
   void onInit() async {
@@ -63,22 +66,19 @@ class EventController extends GetxController {
     await fetchEvents();
     isLoading(false); // Show loading spinner
 
-    // if (await hasInternet()) {
-    //   print(hasInternet());
-    //   print("INternet is here ::: calling the api");
-    //   await fetchEvents(); // API call
-    // } else {
-    //   print("INternet is here ::: calling the api offline mode ");
-    //   await loadEventsFromDatabase(); // Local fallback
-    // }
-
     //Fetching and saving note in db
     await orderNoteController.fetchDetailsFromDb();
     await orderNoteController.fetchOrderNotesFromApi();
 
     //  await eForm.GetGenOrderDataForForm();
     await initializeService(); // Start background service
-    await clockOut.executeAction(tid: 1);
+
+    final position = await location.getLocation();
+    await clockOut.executeAction(
+        tid: 1,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+        latitude: position.latitude!,
+        longitude: position.longitude!);
 
     Get.find<NetworkController>().enableSyncAfterLogin();
   }
@@ -107,7 +107,7 @@ class EventController extends GetxController {
 
   Future<void> fetchEvents() async {
     //print("object");
-    DateTime currentDate =selectedDate?? DateTime.now();
+    DateTime currentDate = selectedDate ?? DateTime.now();
     DateTime secondDate = currentDate.add(Duration(days: daysToAdd));
     String formattedCurrentDate = DateFormat('yyyy-MM-dd').format(currentDate);
     String formattedSecondDate = DateFormat('yyyy-MM-dd').format(secondDate);
@@ -218,8 +218,6 @@ class EventController extends GetxController {
       List<Event> localEvents = await EventTable.fetchEvents();
       events.assignAll(localEvents);
       //  //print("Loaded ${localEvents.length} events from database");
-
-      
 
       // Extract unique wkf and tid values
       Set<String> wkfSet = localEvents.map((event) => event.wkf).toSet();

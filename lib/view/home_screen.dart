@@ -23,6 +23,7 @@ import 'package:geolocator/geolocator.dart' as geo;
 import 'package:ace_routes/view/drawer.dart';
 import 'package:ace_routes/controller/homeController.dart';
 import 'package:intl/intl.dart';
+import 'package:location/location.dart';
 import '../Widgets/icon_with_badge.dart';
 import '../controller/clockout/clockout_controller.dart';
 import '../controller/file_meta_controller.dart';
@@ -62,6 +63,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String userNsp = '';
   String subKey = '';
 
+//-----clock in    //---------location for clockedin
+  Location location = new Location();
   @override
   void initState() {
     super.initState();
@@ -115,11 +118,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     AllTerms.getTerm();
     return WillPopScope(
-      onWillPop: () { 
+      onWillPop: () {
         return onWillPop(context);
-       },
+      },
       child: Scaffold(
-        
         appBar: AppBar(
           title: Obx(() {
             return Column(
@@ -133,7 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   homeController.getFormattedDay(),
                   style: TextStyle(
-                      fontSize: fontSizeController.fontSize, color: Colors.black),
+                      fontSize: fontSizeController.fontSize,
+                      color: Colors.black),
                 ),
               ],
             );
@@ -162,10 +165,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Check if data is loading
                 if (eventController.isLoading.value) {
                   return Center(
-                    child: CircularProgressIndicator(), // Display loading spinner
+                    child:
+                        CircularProgressIndicator(), // Display loading spinner
                   );
                 }
-      
+
                 // Check if eventController.events list is empty
                 if (eventController.events.isEmpty) {
                   return Center(
@@ -175,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 }
-      
+
                 // Display events in a list
                 return RefreshIndicator(
                   onRefresh: () {
@@ -189,26 +193,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       //sequence in order time
                       // Sort events by time in ascending order
                       //   eventController.events.sort((a, b) => a.startDate.compareTo(b.startDate));
-      
+
                       final event = eventController.events[index];
-      
-                      final statusText =
-                          eventController.nameMap[event.wkf] ?? 'Unknown Status';
-      
+
+                      final statusText = eventController.nameMap[event.wkf] ??
+                          'Unknown Status';
+
                       final categoryValue =
                           eventController.categoryMap[event.tid] ??
                               'Unknown Status';
-      
+
                       final priorityValue =
                           eventController.priorityId[event.pid] ??
                               'Unknown priority';
-      
+
                       String priorityColorString =
                           eventController.priorityColorsId[event.pid] ??
                               "#000000"; // Default to black if null
                       priorityColorString = priorityColorString.replaceFirst(
                           "#", "0xFF"); // Convert to Flutter ARGB format
-      
+
                       final int priorityColor =
                           int.parse(priorityColorString); // Convert to int
                       return Card(
@@ -240,7 +244,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                         eventController.nameMap[event.wkf]
                                                     ?.isNotEmpty ??
                                                 false
-                                            ? eventController.nameMap[event.wkf]!
+                                            ? eventController
+                                                .nameMap[event.wkf]!
                                             : statusText,
                                         style: TextStyle(
                                           color: Colors.white,
@@ -256,7 +261,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Column(
                                 children: [
                                   Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       IconButton(
                                         icon: Icon(
@@ -283,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             double responsiveHeight =
                                                 constraints.maxWidth *
                                                     0.3; // 10% of width
-      
+
                                             return Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
@@ -309,15 +315,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                                             event.start_date),
                                                         style: TextStyle(
                                                           color: Colors.white,
-                                                          fontSize: fontSizeController
-                                                              .fontSize, // Responsive font size
+                                                          fontSize:
+                                                              fontSizeController
+                                                                  .fontSize, // Responsive font size
                                                         ),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
                                                 SizedBox(
-                                                    height: constraints.maxWidth *
+                                                    height: constraints
+                                                            .maxWidth *
                                                         0.02), // 2% of width as spacing
                                                 Text(
                                                   event.nm ?? "No name",
@@ -329,7 +337,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   ),
                                                 ),
                                                 SizedBox(
-                                                    height: constraints.maxWidth *
+                                                    height: constraints
+                                                            .maxWidth *
                                                         0.01), // 1% of width as spacing
                                                 Obx(
                                                   () => Center(
@@ -392,7 +401,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   SizedBox(height: 20.0),
                                   // Additional event details row
                                   Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       IconButton(
                                         icon: Icon(
@@ -464,7 +474,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                           onTap: () {
                                             final List<String> coordinates =
                                                 event.geo.split(',');
-                                            final LatLng targetLocation = LatLng(
+                                            final LatLng targetLocation =
+                                                LatLng(
                                               double.parse(
                                                   coordinates[0]), // Latitude
                                               double.parse(
@@ -485,7 +496,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   SizedBox(height: 20.0),
                                   Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       IconButton(
                                         icon: Icon(
@@ -519,9 +531,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   return Text(
                                                     '${eventController.events[index].dtl}',
                                                     style: TextStyle(
-                                                      fontSize: fontSizeController
-                                                          .fontSize,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontSize:
+                                                          fontSizeController
+                                                              .fontSize,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                       color: Colors.black,
                                                     ),
                                                   );
@@ -583,7 +597,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           badgePositionLeft: 0,
                                           badgePositionTop: 0,
                                         ),
-      
+
                                         // Part Type with Badge
                                         Obx(() => IconButtonWithBadge(
                                               icon: Icons.tips_and_updates,
@@ -600,13 +614,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                               badgePositionLeft: 0,
                                               badgePositionTop: 0,
                                             )),
-      
+
                                         // Part Type with Badge
                                         Obx(() => IconButtonWithBadge(
                                               icon: Icons.camera_alt_outlined,
                                               badgeCount: fileMetaController
-                                                      .imageCounts[eventController
-                                                          .events[index].id]
+                                                      .imageCounts[
+                                                          eventController
+                                                              .events[index].id]
                                                       ?.toString() ??
                                                   '0',
                                               onPressed: () async {
@@ -616,18 +631,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     .fetchAndSaveFileMeta(
                                                         eventId);
                                                 Get.to(() => PicUploadScreen(
-                                                    eventId: int.parse(eventId)));
+                                                    eventId:
+                                                        int.parse(eventId)));
                                               },
                                               badgePositionLeft: 0,
                                               badgePositionTop: 0,
                                             )),
-      
+
                                         // Part Type with Badge
                                         Obx(() => IconButtonWithBadge(
                                               icon: Icons.mic,
                                               badgeCount: fileMetaController
-                                                      .audioCounts[eventController
-                                                          .events[index].id]
+                                                      .audioCounts[
+                                                          eventController
+                                                              .events[index].id]
                                                       ?.toString() ??
                                                   '0',
                                               onPressed: () async {
@@ -640,12 +657,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     .fetchAndSaveFileMeta(
                                                         eventId);
                                                 Get.to(() => AudioRecord(
-                                                    eventId: int.parse(eventId)));
+                                                    eventId:
+                                                        int.parse(eventId)));
                                               },
                                               badgePositionLeft: 0,
                                               badgePositionTop: 0,
                                             )),
-      
+
                                         // Part Type with Badge
                                         Obx(() => IconButtonWithBadge(
                                               icon: Icons.edit,
@@ -659,7 +677,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 Get.to(() => Signature(
                                                     eventId: int.parse(
                                                         eventController
-                                                            .events[index].id)));
+                                                            .events[index]
+                                                            .id)));
                                               },
                                               badgePositionLeft: 0,
                                               badgePositionTop: 0,
@@ -681,43 +700,41 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: MapScreen(),
               ),
         bottomNavigationBar: Obx(() => BottomNavigationBar(
-              items: <BottomNavigationBarItem>[
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.mail_rounded, size: 30),
-                  label: 'Inbox',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.location_on_outlined, size: 30),
-                  label: 'Map',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.watch_later_outlined, size: 30),
-                  label: tapped ? 'Clocked In' : "Clocked Out",
-                ),
-              ],
-              currentIndex: homeController.selectedIndex.value,
-              selectedItemColor: Colors.amber[800],
-              unselectedItemColor: Colors.grey,
-              backgroundColor: Colors.blueAccent[300],
-              selectedLabelStyle:
-                  TextStyle(fontSize: fontSizeController.fontSize),
-              unselectedLabelStyle:
-                  TextStyle(fontSize: fontSizeController.fontSize * 0.9),
-              onTap: (index) {
-                setState(() {
+                items: <BottomNavigationBarItem>[
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.mail_rounded, size: 30),
+                    label: 'Inbox',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.location_on_outlined, size: 30),
+                    label: 'Map',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.watch_later_outlined, size: 30),
+                    label: tapped ? 'Clocked In' : "Clocked Out",
+                  ),
+                ],
+                currentIndex: homeController.selectedIndex.value,
+                selectedItemColor: Colors.amber[800],
+                unselectedItemColor: Colors.grey,
+                backgroundColor: Colors.blueAccent[300],
+                selectedLabelStyle:
+                    TextStyle(fontSize: fontSizeController.fontSize),
+                unselectedLabelStyle:
+                    TextStyle(fontSize: fontSizeController.fontSize * 0.9),
+                onTap: (index) async {
                   if (index == 0) {
-                    _showCard = true; // Show card
+                    setState(() {
+                      _showCard = true; // Show card
+                    });
                   } else if (index == 1) {
-                    // Map tab
-      
-                    _showCard = false; // Hide card
-      
+                    setState(() {
+                      _showCard = false; // Hide card
+                    });
                     homeController.getCurrentLocation();
                   } else if (index == 2) {
-                    // Clocked In tab
-                    //  _showCard = false; // Hide card
-                    print('object');
                     tapped = !tapped;
+
                     // Find the first two events whose status is NOT "Completed"
                     List<String> nonCompletedEventIds = eventController.events
                         .where((event) =>
@@ -725,28 +742,37 @@ class _HomeScreenState extends State<HomeScreen> {
                         .map((event) => event.id)
                         .take(2)
                         .toList();
-      
+
                     String? lstoid = nonCompletedEventIds.isNotEmpty
                         ? nonCompletedEventIds[0]
                         : null;
                     String? nxtoid = nonCompletedEventIds.length > 1
                         ? nonCompletedEventIds[1]
                         : null;
-      
+
+                    final position = await location.getLocation();
+
+                    print(" latitude is :: ${position.latitude}");
+
                     // Execute action with filtered event IDs
                     clockOut.executeAction(
-                        lstoid: lstoid, nxtoid: nxtoid, tid: tapped ? 1 : 2);
-      
-                    print("clocked in lstoid  $lstoid  nxtoid $nxtoid  ");
-      
-                    // clockOut.executeAction(tid: tapped ? 1 : 2);
-      
-                    print("clocked in   $tapped");
+                      lstoid: lstoid,
+                      nxtoid: nxtoid,
+                      tid: tapped ? 1 : 0,
+                      timestamp: DateTime.now().millisecondsSinceEpoch,
+                      latitude: position.latitude!,
+                      longitude: position.longitude!,
+                    );
+
+                    print("clocked in lstoid  $lstoid  nxtoid $nxtoid tid");
+                    print("clocked in $tapped");
+
+                    // Optional: update UI
+                    setState(() {});
                   }
-                });
-                homeController.onItemTapped(index);
-              },
-            )),
+
+                  homeController.onItemTapped(index);
+                })),
       ),
     );
   }

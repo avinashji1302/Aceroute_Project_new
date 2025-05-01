@@ -53,17 +53,17 @@ class EformSelect extends StatelessWidget {
                                 'ListTile tapped: ${gType.name}'); // Debugging
                             Navigator.of(context).pop(); // Close the dialog
 
-
                             // Redirect to specific forms based on gType.name
                             if (gType.name == 'BW Form') {
                               Get.to(AddBwForm(gType: gType));
+                              print(gType.id);
+                              print(gType.name);
                             } else if (gType.name == 'Voltage Form') {
                               Get.to(VoltageForm(gType: gType));
                             } else if (gType.name == 'Other Form') {
-                             // Get.to(OtherForm(gType: gType));
+                              // Get.to(OtherForm(gType: gType));
                             } else {
-                              Get.to(
-                                  OtherForm(gType: gType));
+                              Get.to(OtherForm(gType: gType));
                               print('No form found for ${gType.name}');
                             }
                           },

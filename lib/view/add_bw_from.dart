@@ -39,6 +39,17 @@ class _AddBwFormState extends State<AddBwForm> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          IconButton(
+              onPressed: () {
+                print("eform save is clicked ::");
+              },
+              icon: Icon(
+                Icons.done,
+                color: Colors.white,
+                size: 30.0,
+              ))
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -91,7 +102,8 @@ class _AddBwFormState extends State<AddBwForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(item['lbl'], style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(item['lbl'],
+              style: const TextStyle(fontWeight: FontWeight.bold)),
           Column(
             children: [
               for (int i = 0; i < options.length; i += 2)
@@ -99,10 +111,9 @@ class _AddBwFormState extends State<AddBwForm> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-
                     Expanded(
                       child: Obx(
-                            () => RadioListTile<String>(
+                        () => RadioListTile<String>(
                           title: Text(options[i]),
                           value: values[i],
                           groupValue: controller.selectedValue.value,
@@ -115,7 +126,7 @@ class _AddBwFormState extends State<AddBwForm> {
                     if (i + 1 < options.length)
                       Expanded(
                         child: Obx(
-                              () => RadioListTile<String>(
+                          () => RadioListTile<String>(
                             title: Text(options[i + 1]),
                             value: values[i + 1],
                             groupValue: controller.selectedValue.value,
@@ -133,7 +144,6 @@ class _AddBwFormState extends State<AddBwForm> {
       ),
     );
   }
-
 
   // Multi-select for options
   Widget buildMultiSelectOptions(Map<String, dynamic> item) {

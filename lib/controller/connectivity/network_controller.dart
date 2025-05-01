@@ -1,6 +1,8 @@
+import 'package:ace_routes/controller/clockout/clockout_controller.dart';
 import 'package:ace_routes/controller/getOrderPart_controller.dart';
 import 'package:ace_routes/controller/status_updated_controller.dart';
 import 'package:ace_routes/controller/vehicle_controller.dart';
+import 'package:ace_routes/database/offlineTables/clockout_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/order_part_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/status_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/vehicle_sync_table.dart';
@@ -50,7 +52,7 @@ class NetworkController extends GetxController {
           style: TextStyle(color: Colors.red),
         ),
         isDismissible: false,
-        duration: const Duration(days: 1),
+        duration: const Duration(seconds: 3),
       );
     } else {
       if (Get.isSnackbarOpen) {
@@ -61,6 +63,7 @@ class NetworkController extends GetxController {
         await _syncData();
         await _syncVehicleData();
         await _syncOrderParts();
+        await _syncClockOutData();
         print("🔄 Syncing data...");
       } else {
         print("⚠️ Skipping sync — login not completed.");
@@ -164,6 +167,30 @@ class NetworkController extends GetxController {
     print(".............");
   }
 
+  Future<void> _syncClockOutData() async {
+    try {
+      List<Map<String, dynamic>> unsyncedData =
+          await ClockOutSyncTable.getUnsynced();
+      ClockOut clockOutController = Get.put(ClockOut());
+
+      for (var data in unsyncedData) {
+        await clockOutController.executeAction(
+          tid: data['tid'],
+          lstoid: data['lstoid'],
+          nxtoid: data['nxtoid'],
+          timestamp: data['timestamp'],
+          latitude: data['latitude'],
+          longitude: data['longitude'],
+        );
+
+        await ClockOutSyncTable.markSynced(data['id']);
+        print("✅ Synced clockout for tid: ${data['tid']}");
+      }
+    } catch (e) {
+      print("❌ Error syncing clockout data: $e");
+    }
+  }
+
   /// Call this method **after login is complete** to allow syncing
   void enableSyncAfterLogin() {
     canSync = true;
@@ -172,6 +199,7 @@ class NetworkController extends GetxController {
       _syncData();
       _syncVehicleData();
       _syncOrderParts();
+      _syncClockOutData();
     }
   }
 
@@ -190,5 +218,6 @@ class NetworkController extends GetxController {
     await _syncData();
     await _syncVehicleData();
     await _syncOrderParts();
+    await _syncClockOutData();
   }
 }

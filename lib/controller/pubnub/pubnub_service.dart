@@ -107,7 +107,7 @@ class PubNubService extends GetxController {
             break;
 
           case '13':
-            print("📝 Order Note Changed");
+            print("📝 Order Note Changed $xml");
             final orderNoteController = Get.find<OrderNoteController>();
             final vehicleController = Get.put(VehicleController(msgUserId));
 

@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:location/location.dart';
 
 import '../controller/clockout/clockout_controller.dart';
 import '../controller/fontSizeController.dart';
@@ -14,6 +15,8 @@ Future<void> LogoutDailBox(BuildContext context) async {
   // final loginController = Get.find<LoginController>();
   final ClockOut clockOut = Get.find<ClockOut>();
   final LogoutController logoutController = Get.put(LogoutController());
+
+  Location location = new Location(); // cloked in and out
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
@@ -51,7 +54,13 @@ Future<void> LogoutDailBox(BuildContext context) async {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (context) => LoginScreen()),
               );
-              await clockOut.executeAction(tid: 10);
+
+              final position = await location.getLocation();
+              await clockOut.executeAction(
+                  tid: 10,
+                  timestamp: DateTime.now().millisecondsSinceEpoch,
+                  latitude: position.latitude!,
+                  longitude: position.longitude!);
               print("logout tid 10");
 
               await logoutController.logout();

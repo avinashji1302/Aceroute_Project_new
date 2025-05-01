@@ -39,6 +39,11 @@ class _AddBwFormState extends State<OtherForm> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        
+        actions: [
+          IconButton(onPressed: (){}
+              , icon: Icon(Icons.import_contacts_sharp))
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
