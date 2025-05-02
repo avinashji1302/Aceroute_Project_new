@@ -591,6 +591,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 eventController.events[index]
                                                     .tid); // Fetch badge count dynamically
                                             Get.to(EFormScreen(
+                                                oid: eventController
+                                                    .events[index].id,
                                                 tid: eventController
                                                     .events[index].tid));
                                           },
@@ -733,42 +735,43 @@ class _HomeScreenState extends State<HomeScreen> {
                     });
                     homeController.getCurrentLocation();
                   } else if (index == 2) {
-                    tapped = !tapped;
+                    if (index == 2) {
+                      setState(() {
+                        tapped = !tapped;
+                      });
 
-                    // Find the first two events whose status is NOT "Completed"
-                    List<String> nonCompletedEventIds = eventController.events
-                        .where((event) =>
-                            eventController.nameMap[event.wkf] != "Completed")
-                        .map((event) => event.id)
-                        .take(2)
-                        .toList();
+                      // Now run async code
+                      Future.delayed(Duration.zero, () async {
+                        List<String> nonCompletedEventIds = eventController
+                            .events
+                            .where((event) =>
+                                eventController.nameMap[event.wkf] !=
+                                "Completed")
+                            .map((event) => event.id)
+                            .take(2)
+                            .toList();
 
-                    String? lstoid = nonCompletedEventIds.isNotEmpty
-                        ? nonCompletedEventIds[0]
-                        : null;
-                    String? nxtoid = nonCompletedEventIds.length > 1
-                        ? nonCompletedEventIds[1]
-                        : null;
+                        String? lstoid = nonCompletedEventIds.isNotEmpty
+                            ? nonCompletedEventIds[0]
+                            : null;
+                        String? nxtoid = nonCompletedEventIds.length > 1
+                            ? nonCompletedEventIds[1]
+                            : null;
 
-                    final position = await location.getLocation();
+                        final position = await location.getLocation();
 
-                    print(" latitude is :: ${position.latitude}");
+                        clockOut.executeAction(
+                          lstoid: lstoid,
+                          nxtoid: nxtoid,
+                          tid: tapped ? 1 : 0,
+                          timestamp: DateTime.now().millisecondsSinceEpoch,
+                          latitude: position.latitude!,
+                          longitude: position.longitude!,
+                        );
 
-                    // Execute action with filtered event IDs
-                    clockOut.executeAction(
-                      lstoid: lstoid,
-                      nxtoid: nxtoid,
-                      tid: tapped ? 1 : 0,
-                      timestamp: DateTime.now().millisecondsSinceEpoch,
-                      latitude: position.latitude!,
-                      longitude: position.longitude!,
-                    );
-
-                    print("clocked in lstoid  $lstoid  nxtoid $nxtoid tid");
-                    print("clocked in $tapped");
-
-                    // Optional: update UI
-                    setState(() {});
+                        print("clocked in lstoid  $lstoid  nxtoid $nxtoid tid");
+                      });
+                    }
                   }
 
                   homeController.onItemTapped(index);

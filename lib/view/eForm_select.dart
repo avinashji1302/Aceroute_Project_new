@@ -11,7 +11,8 @@ import 'add_bw_from.dart';
 import 'other_form.dart';
 
 class EformSelect extends StatelessWidget {
-  EformSelect({super.key});
+  final String oid;
+  EformSelect( {super.key , required this.oid});
 
   final EFormController controller =
       Get.put(EFormController()); // Initialize the controller
@@ -55,7 +56,7 @@ class EformSelect extends StatelessWidget {
 
                             // Redirect to specific forms based on gType.name
                             if (gType.name == 'BW Form') {
-                              Get.to(AddBwForm(gType: gType));
+                              Get.to(AddBwForm(gType: gType , oid: oid));
                               print(gType.id);
                               print(gType.name);
                             } else if (gType.name == 'Voltage Form') {

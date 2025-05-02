@@ -10,8 +10,12 @@ import 'eForm_select.dart';
 
 class EFormScreen extends StatefulWidget {
   final String tid; // Declare a final variable to hold the tid
+  final String oid;
 
-  EFormScreen({super.key, required this.tid}); // Add tid to the constructor
+  EFormScreen(
+      {super.key,
+      required this.tid,
+      required this.oid}); // Add tid to the constructor
 
   @override
   State<EFormScreen> createState() => _EFormScreenState();
@@ -62,7 +66,7 @@ class _EFormScreenState extends State<EFormScreen> {
               //    Get.to(AddBwForm());
               showDialog(
                 context: context,
-                builder: (context) => EformSelect(),
+                builder: (context) => EformSelect(oid: widget.oid),
               );
             },
           ),
@@ -70,67 +74,7 @@ class _EFormScreenState extends State<EFormScreen> {
       ),
       body: Container(
         child: Container(
-          // height: 130,
-          // width: double.infinity,
-          // child: LayoutBuilder(
-          //   builder: (context, constraints) {
-          //     // Adjust font sizes and padding based on screen width
-          //     double responsiveFontSize =
-          //         constraints.maxWidth * 0.04; // 4% of the width
-          //     double responsivePadding =
-          //         constraints.maxWidth * 0.04; // 4% of the width
-          //
-          //     return SingleChildScrollView(
-          //       child: Card(
-          //         elevation: 4,
-          //         shape: RoundedRectangleBorder(
-          //           borderRadius: BorderRadius.circular(10),
-          //         ),
-          //         child: Padding(
-          //           padding: EdgeInsets.all(responsivePadding),
-          //           child: Column(
-          //             crossAxisAlignment: CrossAxisAlignment.start,
-          //             children: [
-          //               Row(
-          //                 children: [
-          //                   Text(
-          //                     'BW Form ',
-          //                     style: TextStyle(
-          //                       fontSize: responsiveFontSize,
-          //                       fontWeight: FontWeight.bold,
-          //                     ),
-          //                   ),
-          //                 ],
-          //               ),
-          //               SizedBox(height: 10),
-          //               Row(
-          //                 children: [
-          //                   Text(
-          //                     'tested',
-          //                     style: TextStyle(
-          //                       fontSize: responsiveFontSize,
-          //                     ),
-          //                   ),
-          //                 ],
-          //               ),
-          //               SizedBox(height: 10),
-          //               Row(
-          //                 children: [
-          //                   Text(
-          //                     'Yes I have added payment for c...',
-          //                     style: TextStyle(
-          //                       fontSize: responsiveFontSize,
-          //                     ),
-          //                   ),
-          //                 ],
-          //               ),
-          //             ],
-          //           ),
-          //         ),
-          //       ),
-          //     );
-          //   },
-          // ),
+          child: Text("data eform screen"),
         ),
       ),
     );

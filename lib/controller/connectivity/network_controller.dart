@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:ace_routes/controller/clockout/clockout_controller.dart';
 import 'package:ace_routes/controller/getOrderPart_controller.dart';
 import 'package:ace_routes/controller/status_updated_controller.dart';
 import 'package:ace_routes/controller/vehicle_controller.dart';
+import 'package:ace_routes/core/colors/Constants.dart';
+import 'package:ace_routes/database/offlineTables/add_form_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/clockout_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/order_part_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/status_sync_table.dart';
@@ -9,6 +13,7 @@ import 'package:ace_routes/database/offlineTables/vehicle_sync_table.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 
 class NetworkController extends GetxController {
   final Connectivity _connectivity = Connectivity();
@@ -64,6 +69,7 @@ class NetworkController extends GetxController {
         await _syncVehicleData();
         await _syncOrderParts();
         await _syncClockOutData();
+        await _syncAddFormData();
         print("🔄 Syncing data...");
       } else {
         print("⚠️ Skipping sync — login not completed.");
@@ -191,6 +197,56 @@ class NetworkController extends GetxController {
     }
   }
 
+  //form sync -----------------
+  Future<void> _syncAddFormData() async {
+    try {
+      List<Map<String, dynamic>> unsyncedData =
+          await AddFormSyncTable.getUnsynced();
+
+      for (var data in unsyncedData) {
+        print("🔍 Unsynced form data: $data");
+
+        final String geo = data['geo'] ?? '';
+        final String oid = data['oid'] ?? '';
+        final String formId = data['formId'] ?? '';
+        final String ftid = data['ftid'] ?? '';
+        final String frmkey = data['frmkey'] ?? '';
+        final String fdataJson = data['fdata'] ?? '{}';
+
+        print("all data is : $geo $oid $formId $ftid $frmkey $fdataJson");
+
+        if ([geo, oid, formId, ftid].any((e) => e.isEmpty)) {
+          print("❌ Skipping due to missing required fields");
+          continue;
+        }
+
+        Map<String, dynamic> fdata = {};
+        try {
+          fdata = jsonDecode(fdataJson);
+        } catch (e) {
+          print("❌ Error decoding fdata JSON: $e");
+          continue;
+        }
+
+        // Submit the form again
+        final apiUrl =
+            'https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=saveorderform&oid=$oid&id=$formId&ftid=$ftid&fdata=${Uri.encodeComponent(jsonEncode(fdata))}&frmkey=$frmkey&index1=NULL&index2=NULL&index3=NULL&index4=NULL&index5=NULL&index6=NULL&stmp=${DateTime.now().millisecondsSinceEpoch}';
+
+        final response = await http.get(Uri.parse(apiUrl));
+
+        if (response.statusCode == 200) {
+          print("✅ Synced form data for oid: $oid");
+          print(response.body);
+          await AddFormSyncTable.markSynced(data['id']);
+        } else {
+          print("❌ Failed to sync form: ${response.body}");
+        }
+      }
+    } catch (e) {
+      print("❌ Error fetching unsynced form data: $e");
+    }
+  }
+
   /// Call this method **after login is complete** to allow syncing
   void enableSyncAfterLogin() {
     canSync = true;
@@ -200,6 +256,7 @@ class NetworkController extends GetxController {
       _syncVehicleData();
       _syncOrderParts();
       _syncClockOutData();
+      _syncAddFormData();
     }
   }
 
@@ -219,5 +276,6 @@ class NetworkController extends GetxController {
     await _syncVehicleData();
     await _syncOrderParts();
     await _syncClockOutData();
+    await _syncAddFormData();
   }
 }

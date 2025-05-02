@@ -1,8 +1,6 @@
-import 'dart:convert';
 
 import 'package:ace_routes/controller/background/location_service.dart';
 import 'package:ace_routes/controller/clockout/clockout_controller.dart';
-import 'package:ace_routes/controller/connectivity/dependecy_injection.dart';
 import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/controller/eform_controller.dart';
 import 'package:ace_routes/controller/getOrderPart_controller.dart';
@@ -10,7 +8,6 @@ import 'package:ace_routes/controller/priority_controller.dart';
 import 'package:ace_routes/database/Tables/OrderTypeDataTable.dart';
 import 'package:ace_routes/database/Tables/event_table.dart';
 import 'package:ace_routes/database/Tables/prority_table.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -20,11 +17,9 @@ import 'package:xml/xml.dart' as xml;
 
 import '../core/Constants.dart';
 import '../core/colors/Constants.dart';
-import '../core/xml_to_json_converter.dart';
 import '../database/Tables/status_table.dart';
 import '../database/databse_helper.dart';
 import '../model/event_model.dart';
-import '../model/login_model/token_api_response.dart';
 import 'all_terms_controller.dart';
 import 'orderNoteConroller.dart';
 
@@ -74,8 +69,9 @@ class EventController extends GetxController {
     await initializeService(); // Start background service
 
     final position = await location.getLocation();
+    print("login : ${position.altitude}");
     await clockOut.executeAction(
-        tid: 1,
+        tid: 11,
         timestamp: DateTime.now().millisecondsSinceEpoch,
         latitude: position.latitude!,
         longitude: position.longitude!);

@@ -9,8 +9,10 @@ import '../model/GTypeModel.dart';
 
 class AddBwForm extends StatefulWidget {
   final GTypeModel gType;
+  final String oid;
 
-  const AddBwForm({Key? key, required this.gType}) : super(key: key);
+  const AddBwForm({Key? key, required this.gType, required this.oid})
+      : super(key: key);
 
   @override
   State<AddBwForm> createState() => _AddBwFormState();
@@ -41,7 +43,15 @@ class _AddBwFormState extends State<AddBwForm> {
         ),
         actions: [
           IconButton(
-              onPressed: () {
+              onPressed: () async {
+                await controller.submitForm(
+                  geo: "28.6139,77.2090", // Replace with actual location
+
+                  oid: widget.oid,
+                  formId: "0", // Or actual ID if editing
+                  ftid: widget.gType.id.toString(),
+                  formFields: widget.gType.details['frm'],
+                );
                 print("eform save is clicked ::");
               },
               icon: Icon(

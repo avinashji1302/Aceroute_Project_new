@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:ace_routes/database/Tables/eform_data_table.dart';
 import 'package:ace_routes/database/Tables/file_meta_table.dart';
 import 'package:ace_routes/database/Tables/prority_table.dart';
+import 'package:ace_routes/database/offlineTables/add_form_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/clockout_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/order_part_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/status_sync_table.dart';
@@ -71,7 +72,8 @@ class DatabaseHelper {
       StatusSyncTable.onCreate(db), // 👈 Add this here
       VehicleSyncTable.onCreate(db),
       OrderPartSyncTable.onCreate(db),
-      ClockOutSyncTable.onCreate(db)
+      ClockOutSyncTable.onCreate(db),
+      AddFormSyncTable.onCreate(db)
     ]);
     print("All tables created successfully.");
   }
