@@ -6,7 +6,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
    
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 <!-- Optional: Add this permission if you want to use bluetooth telephony device like headset/earbuds -->
@@ -30,10 +31,16 @@
             <!-- 🔥 FIXED the service name and added all needed types -->
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
+            android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="location|dataSync|mediaPlayback|connectedDevice"
             android:permission="android.permission.FOREGROUND_SERVICE"
             tools:replace="android:exported" /> <!-- 🔥 Added here -->
+
+        <receiver
+            android:name="id.flutter.flutter_background_service.FlutterBackgroundServiceReceiver"
+            android:enabled="true"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"

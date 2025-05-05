@@ -66,7 +66,7 @@ class EventController extends GetxController {
     await orderNoteController.fetchOrderNotesFromApi();
 
     //  await eForm.GetGenOrderDataForForm();
-  //  await initializeService(); // Start background service
+    // await initializeService(); // Start background service
 
     final position = await location.getLocation();
     print("login : ${position.altitude}");

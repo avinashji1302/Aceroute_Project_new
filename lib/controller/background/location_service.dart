@@ -69,7 +69,7 @@ Future<void> fetchDataFromLogin() async {
 
 // ✅ **2. Initialize Background Service**
 Future<void> initializeService() async {
-  await fetchDataFromLogin(); // First, load data from SQLite to SharedPreferences
+  
 
   print("🔹 Initializing Background Service...");
   final service = FlutterBackgroundService();
@@ -99,7 +99,7 @@ void onStart(ServiceInstance service) async {
         content: "Tracking location in the background...",
       );
     }
-
+     await fetchDataFromLogin(); // First, load data from SQLite to SharedPreferences
     _initializeBackgroundTasks(service);
   } catch (e) {
     print(
@@ -108,12 +108,14 @@ void onStart(ServiceInstance service) async {
 }
 
 Future<void> _initializeBackgroundTasks(ServiceInstance service) async {
+
+  print("Now Start the background task:");
   try {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
     locChangeThreshold = prefs.getString("locChangeThreshold") ?? "10";
     syncIntervalMinutes = prefs.getString("syncIntervalMinutes") ?? "10";
-
+     print("Now calling stat location update api and sending data on server ");
     await _startLocationUpdates();
     await _sendDataToServer();
 

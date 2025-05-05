@@ -27,8 +27,4 @@ class GetMediaFile extends GetxController {
       print("Failed to load image, Status Code: ${response.statusCode}");
     }
   }
-
-
-
-
 }

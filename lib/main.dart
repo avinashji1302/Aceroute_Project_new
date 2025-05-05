@@ -27,9 +27,10 @@ void main() async {
   // Set up Flutter error logging
   FlutterError.onError = (FlutterErrorDetails details) async {
     FlutterError.presentError(details);
-    await logErrorToFile(details.exception.toString(), details.stack.toString());
+    await logErrorToFile(
+        details.exception.toString(), details.stack.toString());
   };
-
+  await initializeService(); // ⬅️ Call it here once
   // Catch uncaught async errors
   runZonedGuarded(() {
     Get.put(FontSizeController());

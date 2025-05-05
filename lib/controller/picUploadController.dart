@@ -23,6 +23,9 @@ class PicUploadController extends GetxController {
       File file = File(pickedFile.path);
       if (images.length < 6) {
         images.add(file);
+
+
+        
       } else {
         Get.snackbar('Limit Reached', 'You can only upload up to 6 images.',
             snackPosition: SnackPosition.BOTTOM);
