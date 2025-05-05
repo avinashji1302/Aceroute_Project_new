@@ -2,11 +2,11 @@ import 'package:ace_routes/core/colors/Constants.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
-class LogoutController extends GetxController{
-  final String url =
-      "https://portal.aceroute.com/mobi?token=$token&nspace=$nsp&geo=<current lat,lon>&rid=$rid&action=logout&stmp=<timestamp>";
+class LogoutController extends GetxController {
+  Future<void> logout(int timestamp, String lat, String lon) async {
+    final String url =
+        "https://portal.aceroute.com/mobi?token=$token&nspace=$nsp&geo=$lat,$lon&rid=$rid&action=logout&stmp=$timestamp";
 
-  Future<void> logout() async {
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -16,3 +16,4 @@ class LogoutController extends GetxController{
     }
   }
 }
+

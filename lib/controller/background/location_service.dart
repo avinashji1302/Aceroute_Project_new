@@ -4,6 +4,7 @@ import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/controller/event_controller.dart';
 import 'package:ace_routes/model/event_model.dart';
 import 'package:ace_routes/model/login_model/token_api_response.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -84,36 +85,50 @@ Future<void> initializeService() async {
 }
 
 // ✅ **3. Start Background Service (Reads from SharedPreferences)**
+@pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
-  if (service is AndroidServiceInstance) {
-    service.on('stopService').listen((event) {
-      service.stopSelf();
-    });
+  try {
+    if (service is AndroidServiceInstance) {
+      service.on('stopService').listen((event) {
+        service.stopSelf();
+      });
+
+      // 🔔 Required for Foreground Service
+      service.setForegroundNotificationInfo(
+        title: "Ace Routes Background Service",
+        content: "Tracking location in the background...",
+      );
+    }
+
+    _initializeBackgroundTasks(service);
+  } catch (e) {
+    print(
+        "❌ Error in background service onStart: $e"); // 🔧 FIX: Prevent silent crash
   }
+}
 
-  // 🟢 Fetch Data from SharedPreferences
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
-  locChangeThreshold = prefs.getString("locChangeThreshold") ?? "10";
-  syncIntervalMinutes = prefs.getString("syncIntervalMinutes") ?? "10";
+Future<void> _initializeBackgroundTasks(ServiceInstance service) async {
+  try {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  print("🔄 Background Service Using SharedPreferences:");
-  print("Fetched locChangeThreshold: $locChangeThreshold");
-  print("Fetched syncIntervalMinutes: $syncIntervalMinutes");
+    locChangeThreshold = prefs.getString("locChangeThreshold") ?? "10";
+    syncIntervalMinutes = prefs.getString("syncIntervalMinutes") ?? "10";
 
-  await _startLocationUpdates(); // Start GPS tracking
-  await _sendDataToServer();
-
-  // 🕒 Call API periodically
-  Timer.periodic(Duration(minutes: int.tryParse(syncIntervalMinutes) ?? 10),
-      (timer) async {
     await _startLocationUpdates();
     await _sendDataToServer();
-  });
 
-  await _waitUntilMidnight();
-  //these two runs exactly at 12am in  night for sync and fetch current data automatically
-  await networkController.syncAll();
-  await event.fetchEvents();
+    Timer.periodic(Duration(minutes: int.tryParse(syncIntervalMinutes) ?? 10),
+        (timer) async {
+      await _startLocationUpdates();
+      await _sendDataToServer();
+    });
+
+    await _waitUntilMidnight();
+    await networkController.syncAll();
+    await event.fetchEvents();
+  } catch (e) {
+    print("❌ Error in background tasks: $e");
+  }
 }
 
 // ⏰ Wait until 12:00 AM

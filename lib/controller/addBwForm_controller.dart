@@ -110,13 +110,15 @@ class AddBwFormController extends GetxController {
     final apiUrl =
         'https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=saveorderform&oid=$oid&id=$formId&ftid=$ftid&fdata=${Uri.encodeComponent(jsonEncode(fdata))}&frmkey=$frmkey&index1=NULL&index2=NULL&index3=NULL&index4=NULL&index5=NULL&index6=NULL&stmp=${DateTime.now().millisecondsSinceEpoch}';
 
+
+    print("APi  url ; $apiUrl");
     try {
       final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
         print("Form submitted successfully!");
 
-        print(response.body);
+        print("response : ${response.body}");
 
         // Upload image if present
         if (selectedImage.value != null) {

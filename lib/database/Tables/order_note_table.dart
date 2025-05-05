@@ -32,6 +32,8 @@ class OrderNoteTable {
       orderNoteModel.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+
+    print("insereted successfylly notes");
   }
 
   // Fetch all records

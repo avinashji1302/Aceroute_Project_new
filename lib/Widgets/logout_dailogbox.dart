@@ -1,4 +1,5 @@
 import 'package:ace_routes/controller/clockout/logout_controller.dart';
+import 'package:ace_routes/controller/event_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -17,6 +18,41 @@ Future<void> LogoutDailBox(BuildContext context) async {
   final LogoutController logoutController = Get.put(LogoutController());
 
   Location location = new Location(); // cloked in and out
+
+  void _handleLogout(BuildContext context) async {
+    try {
+      // Get current location
+      final position = await location.getLocation();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+
+      // Perform your custom logout logic (e.g., clockOut)
+      await clockOut.executeAction(
+        tid: 10,
+        timestamp: timestamp,
+        latitude: position.latitude!,
+        longitude: position.longitude!,
+      );
+      print("logout tid 10");
+
+      // Call the API logout
+      await logoutController.logout(
+        timestamp,
+        position.latitude!.toString(),
+        position.longitude!.toString(),
+      );
+
+      // Clean up state
+      Get.delete<LoginController>();
+      Get.delete<EventController>();
+
+      // Navigate to Login screen
+      Get.offAll(() => LoginScreen());
+    } catch (e) {
+      print("Error during logout: $e");
+      // Optionally show a snackbar or dialog
+    }
+  }
+
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
@@ -48,22 +84,26 @@ Future<void> LogoutDailBox(BuildContext context) async {
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: fontSizeController.fontSize)),
-            onPressed: () async {
-              final loginController = Get.find<LoginController>();
+            onPressed: () {
               // loginController.clearFields();
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => LoginScreen()),
-              );
 
-              final position = await location.getLocation();
-              await clockOut.executeAction(
-                  tid: 10,
-                  timestamp: DateTime.now().millisecondsSinceEpoch,
-                  latitude: position.latitude!,
-                  longitude: position.longitude!);
-              print("logout tid 10");
+              // Get.delete<LoginController>();
+              // Get.delete<EventController>(); // if needed
 
-              await logoutController.logout();
+              // Navigator.of(context).pushReplacement(
+              //   MaterialPageRoute(builder: (context) => LoginScreen()),
+              // );
+
+              // final position = await location.getLocation();
+              // await clockOut.executeAction(
+              //     tid: 10,
+              //     timestamp: DateTime.now().millisecondsSinceEpoch,
+              //     latitude: position.latitude!,
+              //     longitude: position.longitude!);
+              // print("logout tid 10");
+
+              // await logoutController.logout();
+              _handleLogout(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,

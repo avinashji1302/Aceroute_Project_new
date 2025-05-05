@@ -53,6 +53,8 @@ class _AddBwFormState extends State<AddBwForm> {
                   formFields: widget.gType.details['frm'],
                 );
                 print("eform save is clicked ::");
+
+                Navigator.of(context).pop();
               },
               icon: Icon(
                 Icons.done,

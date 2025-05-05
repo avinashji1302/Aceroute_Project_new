@@ -48,6 +48,8 @@ class LoginController extends GetxController {
 
   String? sessionToken;
 
+  RxString username='Not found'.obs;
+
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
   }
@@ -208,6 +210,9 @@ class LoginController extends GetxController {
       rid = data.requestId;
       token = data.token;
       geo = data.geoLocation;
+      username.value = data.responderName;
+
+      print("Username");
 
       print("geo tokenn rid $rid $geo $token");
     }

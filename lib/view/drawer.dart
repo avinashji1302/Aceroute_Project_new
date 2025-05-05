@@ -26,6 +26,7 @@ class DrawerWidget extends StatelessWidget {
 
   final eventController = Get.find<EventController>();
   final NetworkController networkController = Get.find<NetworkController>();
+  final LoginController loginController = Get.find<LoginController>();
 
   Future<void> _openGoogleMaps() async {
     loc.Location location = loc.Location();
@@ -95,14 +96,16 @@ class DrawerWidget extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 4),
-                          Text(
-                            'John Doe',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: fontSizeController.fontSize,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          Obx(() {
+                            return Text(
+                              loginController.username.value,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: fontSizeController.fontSize,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          }),
                           const SizedBox(height: 4),
                           Text(
                             'New York, USA',
@@ -135,7 +138,7 @@ class DrawerWidget extends StatelessWidget {
 
               // Then call the sync methods
               Get.find<NetworkController>().syncAll();
-            //  Get.deleteAll();
+              //  Get.deleteAll();
               print("🔁 Manual sync triggered");
 
               eventController.fetchEvents();

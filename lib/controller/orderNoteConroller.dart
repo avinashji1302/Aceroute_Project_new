@@ -35,13 +35,13 @@ class OrderNoteController extends GetxController {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         // print("Raw XML response: ${response.body}");
-
+        print("Converted JSON: ${response.body}");
         // Parse XML and convert to JSON manually
         final document = XmlDocument.parse(response.body);
         final dataElement = document.findAllElements('data').first.text.trim();
         final jsonResponse = jsonEncode(dataElement);
 
-      //  print("Converted JSON: ${jsonResponse}");
+        print("Converted JSON: ${jsonResponse}");
 
         // Save to the local database
         final orderNote = OrderNoteModel(data: jsonResponse);

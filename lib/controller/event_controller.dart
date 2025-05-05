@@ -66,7 +66,7 @@ class EventController extends GetxController {
     await orderNoteController.fetchOrderNotesFromApi();
 
     //  await eForm.GetGenOrderDataForForm();
-    await initializeService(); // Start background service
+  //  await initializeService(); // Start background service
 
     final position = await location.getLocation();
     print("login : ${position.altitude}");
@@ -102,7 +102,7 @@ class EventController extends GetxController {
   }
 
   Future<void> fetchEvents() async {
-    //print("object");
+    print("time zone is: ${DateTime.now().timeZoneName}");
     DateTime currentDate = selectedDate ?? DateTime.now();
     DateTime secondDate = currentDate.add(Duration(days: daysToAdd));
     String formattedCurrentDate = DateFormat('yyyy-MM-dd').format(currentDate);
@@ -110,7 +110,7 @@ class EventController extends GetxController {
 
     isLoading(true);
     var url =
-        "https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=getorders&tz=Asia/Kolkata&from=${formattedCurrentDate}&to=${formattedSecondDate}";
+        "https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=getorders&tz=${DateTime.now().timeZoneName}&from=${formattedCurrentDate}&to=${formattedSecondDate}";
 
     print("Fetching events from URL: $url");
 

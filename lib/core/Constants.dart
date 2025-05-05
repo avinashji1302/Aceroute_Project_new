@@ -33,6 +33,7 @@ class AllTerms extends GetxController {
   static final orderGroupLabel = "".obs;
   static final fieldOrderRules = "".obs;
   static final invoiceEmailLabel = "".obs;
+  
 
   static Future<void> getTerm() async {
     List<TermsDataModel> dataList = await TermsDataTable.fetchTermsData();
