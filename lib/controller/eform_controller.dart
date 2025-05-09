@@ -11,7 +11,7 @@ class EFormController extends GetxController {
   Future<void> GetGenOrderDataForForm(String tid) async {
     capacity = tid; //(Tid of event is same as specific order type);
     List<GTypeModel> fetchedGTypes = await GTypeTable.fetchGTypeByTid(capacity);
-    // print(capacity);
+     print(" gtype for tid : $fetchedGTypes");
 
     if (fetchedGTypes.isNotEmpty) {
       //  print("Eform data is here:");

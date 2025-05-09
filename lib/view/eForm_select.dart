@@ -1,9 +1,6 @@
-import 'package:ace_routes/view/e_from.dart';
 import 'package:ace_routes/view/voltage_form.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
 import '../controller/eform_controller.dart';
 import '../model/GTypeModel.dart';
@@ -31,18 +28,22 @@ class EformSelect extends StatelessWidget {
       ),
       content: SizedBox(
         height: height * 0.5, // 50% of screen height
-        width: width * 0.8,   // 80% of screen width
+        width: width * 0.8, // 80% of screen width
         child: Obx(() {
           if (controller.gTypeList.isEmpty) {
             return Center(child: CircularProgressIndicator());
           } else {
-            List<GTypeModel> sortedGTypes = List.from(controller.gTypeList)
+            List<GTypeModel> filteredGTypes = controller.gTypeList
+                .where((gType) => gType.typeId == '10')
+                .toList()
               ..sort((a, b) => a.name.compareTo(b.name));
             return ListView.builder(
-              itemCount: sortedGTypes.length,
+              itemCount: filteredGTypes.length,
               itemBuilder: (context, index) {
-                GTypeModel gType = sortedGTypes[index];
+                GTypeModel gType = filteredGTypes[index];
                 bool isDetailsNotEmpty = gType.details.isNotEmpty;
+
+                print("ALl the data : ${gType}");
 
                 if (!isDetailsNotEmpty) return SizedBox.shrink();
 
@@ -52,15 +53,19 @@ class EformSelect extends StatelessWidget {
                       onTap: () {
                         Navigator.of(context).pop();
 
-                        if (gType.name == 'BW Form') {
-                          Get.to(AddBwForm(gType: gType, oid: oid));
-                        } else if (gType.name == 'Voltage Form') {
-                          Get.to(VoltageForm(gType: gType));
-                        } else {
-                          Get.to(OtherForm(gType: gType));
-                        }
+                        print(" Tapped : ${gType}  ${gType.details}");
+
+                        // if (gType.id == 'BW Form') {
+                        //   Get.to(AddBwForm(gType: gType, oid: oid));
+                        // } else if (gType.name == 'Voltage Form') {
+                        //   Get.to(VoltageForm(gType: gType));
+                        // } else {
+                        //   Get.to(OtherForm(gType: gType, oid: oid));
+                        // }
+
+                        Get.to(OtherForm(gType: gType, oid: oid));
                       },
-                      title: Text(gType.name),
+                      title: Text("${gType.name}  ${gType.id}"),
                     ),
                     Divider(),
                   ],

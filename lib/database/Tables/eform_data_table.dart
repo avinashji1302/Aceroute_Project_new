@@ -64,11 +64,14 @@ class EFormDataTable {
     await batch.commit();
   }
 
-  // Fetch all EForms
-  static Future<List<Map<String, dynamic>>> fetchEForms() async {
-    final db = await DatabaseHelper().database;
-    return await db.query(tableName);
-  }
+// Fetch all EForm data from the database
+static Future<List<Map<String, dynamic>>> fetchAllEForms() async {
+  final db = await DatabaseHelper().database;
+  final result = await db.query(tableName); // No 'where' clause needed to fetch all
+
+  return result.isNotEmpty ? result : [];
+}
+
 
   // Fetch EForm by ID
   static Future<Map<String, dynamic>?> fetchEFormById(String id) async {

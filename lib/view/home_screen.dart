@@ -54,8 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final MapControllers mapControllers = Get.put(MapControllers());
   final controller = Get.put(GetOrderPartController());
   final ClockOut clockOut = Get.find<ClockOut>();
-  final EFormDataController eFormDataController =
-      Get.put(EFormDataController());
+  // final EFormDataController eFormDataController =
+  //     Get.put(EFormDataController());
   List<bool> temp = [true, false];
 
   bool tapped = false;
@@ -73,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
       fetchFileMetaForAllEvents();
     });
     controller.orderPartsList.refresh();
-    eFormDataController.fetchEForm();
+    // eFormDataController.fetchEForm();
   }
 
   @override
@@ -581,15 +581,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                       children: [
                                         IconButtonWithBadge(
                                           icon: Icons.person_2_sharp,
-                                          badgeCount: eFormDataController
-                                                  .badgeCounts[eventController
-                                                      .events[index].tid]
-                                                  ?.toString() ??
-                                              '0',
+                                          badgeCount: '0',
                                           onPressed: () {
-                                            eFormDataController.fetchBadgeCount(
-                                                eventController.events[index]
-                                                    .tid); // Fetch badge count dynamically
                                             Get.to(EFormScreen(
                                                 oid: eventController
                                                     .events[index].id,

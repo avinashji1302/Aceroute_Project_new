@@ -1,4 +1,3 @@
-
 import 'package:ace_routes/controller/background/location_service.dart';
 import 'package:ace_routes/controller/clockout/clockout_controller.dart';
 import 'package:ace_routes/controller/connectivity/network_controller.dart';
@@ -67,7 +66,7 @@ class EventController extends GetxController {
 
     //  await eForm.GetGenOrderDataForForm();
     // await initializeService(); // Start background service
-
+    await fetchDataFromLogin(); // First, load data from SQLite to SharedPreferences
     final position = await location.getLocation();
     print("login : ${position.altitude}");
     await clockOut.executeAction(

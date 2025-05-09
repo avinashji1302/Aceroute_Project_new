@@ -66,63 +66,70 @@ class AddBwFormController extends GetxController {
     required String ftid,
     required List formFields,
   }) async {
-    // Step 1: Build fdata (form values in key-value pairs)
-    Map<String, dynamic> fdata = {};
-
+    // Step 1: Set `val` field in each form item based on its type
     for (var field in formFields) {
-      switch (field['id']) {
-        case 1: // Text field
-          fdata[field['nm']] = textEditingControllers[field['nm']]?.text ?? '';
+      final tid = field['tid'];
+      final name = field['nm'];
+
+      switch (tid) {
+        case 1: // Text
+          field['val'] = textEditingControllers[name]?.text ?? '';
           break;
         case 2: // Radio
-          fdata[field['nm']] = selectedValue.value;
+        case 8: // Custom Radio-like
+        case 9: // Custom Radio-like
+          field['val'] =
+              selectedValue.value; // Or use a map if you have multiple radios
           break;
         case 4: // Multi-select
-          fdata[field['nm']] = selectedValues.toList();
+          field['val'] = selectedValues.toList();
           break;
         case 3: // Image
-          // Will be handled separately, but we send the image name (optional)
-          fdata[field['nm']] = selectedImage.value?.name ?? '';
+        case 13: // Custom image type
+          field['val'] = selectedImage.value?.name ?? '';
+          break;
+        default:
+          print("Unhandled field type: $tid");
           break;
       }
     }
 
-    print(" fdata is :: $fdata");
-    // Step 2: Create form key if image exists
+    final fullFormData = {
+      'frm': formFields,
+    };
+
+    print("fullFormData = $fullFormData");
+
     String frmkey = selectedImage.value != null
         ? DateTime.now().millisecondsSinceEpoch.toString()
         : '';
 
-    if (networkController.isOnline.value == false) {
+    if (!networkController.isOnline.value) {
       await AddFormSyncTable.insert(
           geo: geo,
           oid: oid,
           formId: formId,
           ftid: ftid,
-          fdata: fdata,
+          fdata: fullFormData,
           frmkey: frmkey);
-          print("form saved offline :");
       Get.snackbar("Offline", "Form saved locally. It will sync when online.");
       return;
     }
 
-    // Step 3: Build full URL
     final apiUrl =
-        'https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=saveorderform&oid=$oid&id=$formId&ftid=$ftid&fdata=${Uri.encodeComponent(jsonEncode(fdata))}&frmkey=$frmkey&index1=NULL&index2=NULL&index3=NULL&index4=NULL&index5=NULL&index6=NULL&stmp=${DateTime.now().millisecondsSinceEpoch}';
+        'https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=saveorderform&oid=$oid&id=$formId&ftid=$ftid&fdata=${Uri.encodeComponent(jsonEncode(fullFormData))}&frmkey=$frmkey&index1=NULL&index2=NULL&index3=NULL&index4=NULL&index5=NULL&index6=NULL&stmp=${DateTime.now().millisecondsSinceEpoch}';
 
+    print("API URL: $apiUrl");
 
-    print("APi  url ; $apiUrl");
     try {
       final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
         print("Form submitted successfully!");
+        print("Response: ${response.body}");
 
-        print("response : ${response.body}");
-
-        // Upload image if present
         if (selectedImage.value != null) {
-          //   await uploadImage(frmkey);
+          // await uploadImage(frmkey);
         }
       } else {
         print("Form submission failed: ${response.body}");

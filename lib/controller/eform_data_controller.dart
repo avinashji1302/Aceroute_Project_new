@@ -12,18 +12,24 @@ import 'event_controller.dart';
 class EFormDataController extends GetxController {
   // Fetch EForm from the server and parse it
 
+  final String oid;
+
+  EFormDataController({required this.oid});
+
   var badgeCounts = <String, int>{}.obs;
   Future<List<EFormDataModel>?> fetchEForm() async {
-    final List<Event> events = await EventTable.fetchEvents();
-    if (events.isEmpty) {
-      print('No events found.');
-      return null;
-    }
+    // final List<Event> events = await EventTable.fetchEvents();
+    // if (events.isEmpty) {
+    //   print('No events found.');
+    //   return null;
+    // }
 
-    final String eventId = events.first.id;
+    // print("data in eform event : $events");
+
+    // final String eventId = events.first.id;
 
     final uri = Uri.parse(
-        'https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=getorderform&oid=$eventId');
+        'https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=getorderform&oid=$oid');
     var request = http.Request('GET', uri);
     //  print('Fetching EForm URL: $uri');
 
@@ -34,7 +40,7 @@ class EFormDataController extends GetxController {
         final responseData = await response.stream.bytesToString();
 
         // Debug: Print the raw XML data to inspect the response
-        //  print('Raw Response Data: $responseData');
+        print('Raw Response Data:: $responseData');
 
         // Parse XML to extract relevant data manually
         final xmlDoc = XmlDocument.parse(responseData);
@@ -166,5 +172,20 @@ class EFormDataController extends GetxController {
   Future<void> fetchBadgeCount(String tid) async {
     int count = await EFormDataTable.getEFormCountByTid(tid);
     badgeCounts[tid] = count;
+  }
+
+  //---------------------------------form save---------------------
+  Future<List<Map<String, dynamic>>> fetchSavedDataFromDb() async {
+    // Fetch all data from the database
+    final data = await EFormDataTable.fetchAllEForms();
+
+    if (data.isNotEmpty) {
+      // Process the data if not empty
+      print("Processing EForm data: $data");
+    } else {
+      print("No saved EForm data found.");
+    }
+
+    return data;
   }
 }

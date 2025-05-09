@@ -107,13 +107,7 @@ class DrawerWidget extends StatelessWidget {
                             );
                           }),
                           const SizedBox(height: 4),
-                          Text(
-                            'New York, USA',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: fontSizeController.fontSize,
-                            ),
-                          ),
+                       
                         ],
                       )
                     ],

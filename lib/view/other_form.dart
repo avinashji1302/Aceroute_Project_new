@@ -1,22 +1,24 @@
 import 'dart:io';
 
+import 'package:ace_routes/controller/addBwForm_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import '../controller/addBwForm_controller.dart';
 import '../core/colors/Constants.dart';
 import '../model/GTypeModel.dart';
 
 class OtherForm extends StatefulWidget {
   final GTypeModel gType;
+  final String oid;
 
-  const OtherForm({Key? key, required this.gType}) : super(key: key);
+  const OtherForm({Key? key, required this.gType, required this.oid})
+      : super(key: key);
 
   @override
-  State<OtherForm> createState() => _AddBwFormState();
+  State<OtherForm> createState() => _OtherFormState();
 }
 
-class _AddBwFormState extends State<OtherForm> {
+class _OtherFormState extends State<OtherForm> {
   final controller = Get.put(AddBwFormController());
 
   @override
@@ -39,10 +41,26 @@ class _AddBwFormState extends State<OtherForm> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        
         actions: [
-          IconButton(onPressed: (){}
-              , icon: Icon(Icons.import_contacts_sharp))
+          IconButton(
+              onPressed: () async {
+                await controller.submitForm(
+                  geo: "28.6139,77.2090", // Replace with actual location
+
+                  oid: widget.oid,
+                  formId: "0", // Or actual ID if editing
+                  ftid: widget.gType.id.toString(),
+                  formFields: widget.gType.details['frm'],
+                );
+                print("eform save is clicked ::");
+
+                Navigator.of(context).pop();
+              },
+              icon: Icon(
+                Icons.done,
+                color: Colors.white,
+                size: 30.0,
+              ))
         ],
       ),
       body: Padding(
@@ -96,7 +114,8 @@ class _AddBwFormState extends State<OtherForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(item['lbl'], style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(item['lbl'],
+              style: const TextStyle(fontWeight: FontWeight.bold)),
           Column(
             children: [
               for (int i = 0; i < options.length; i += 2)
@@ -104,10 +123,9 @@ class _AddBwFormState extends State<OtherForm> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-
                     Expanded(
                       child: Obx(
-                            () => RadioListTile<String>(
+                        () => RadioListTile<String>(
                           title: Text(options[i]),
                           value: values[i],
                           groupValue: controller.selectedValue.value,
@@ -120,7 +138,7 @@ class _AddBwFormState extends State<OtherForm> {
                     if (i + 1 < options.length)
                       Expanded(
                         child: Obx(
-                              () => RadioListTile<String>(
+                          () => RadioListTile<String>(
                             title: Text(options[i + 1]),
                             value: values[i + 1],
                             groupValue: controller.selectedValue.value,
@@ -139,7 +157,6 @@ class _AddBwFormState extends State<OtherForm> {
     );
   }
 
-
   // Multi-select for options
   Widget buildMultiSelectOptions(Map<String, dynamic> item) {
     List<String> options = item['ddn'].split(',');
@@ -154,7 +171,7 @@ class _AddBwFormState extends State<OtherForm> {
               style: const TextStyle(fontWeight: FontWeight.bold)),
           ...List.generate(options.length, (index) {
             return Obx(
-                  () => CheckboxListTile(
+              () => CheckboxListTile(
                 title: Text(
                   options[index],
                   style: TextStyle(
@@ -217,7 +234,7 @@ class _AddBwFormState extends State<OtherForm> {
             );
           },
           child: Obx(
-                () => Container(
+            () => Container(
               height: 150,
               width: double.infinity,
               decoration: BoxDecoration(
@@ -226,13 +243,13 @@ class _AddBwFormState extends State<OtherForm> {
               ),
               child: controller.selectedImage.value == null
                   ? const Center(
-                child:
-                Icon(Icons.camera_alt, size: 50, color: Colors.grey),
-              )
+                      child:
+                          Icon(Icons.camera_alt, size: 50, color: Colors.grey),
+                    )
                   : Image.file(
-                File(controller.selectedImage.value!.path),
-                fit: BoxFit.cover,
-              ),
+                      File(controller.selectedImage.value!.path),
+                      fit: BoxFit.cover,
+                    ),
             ),
           ),
         ),

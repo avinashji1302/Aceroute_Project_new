@@ -27,6 +27,7 @@ final EventController event = Get.find<EventController>();
 
 // ✅ **1. Load Data from SQLite & Save to SharedPreferences**
 Future<void> fetchDataFromLogin() async {
+  print("not even called : ");
   try {
     List<TokenApiReponse> loginDataList = await ApiDataTable.fetchData();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -60,7 +61,7 @@ Future<void> fetchDataFromLogin() async {
     await prefs.setString("nsp", nsp);
     await prefs.setString("token", token);
     await prefs.setString("rid", rid);
-    print("✅ Saved lstoid: ${lstoid}");
+    print("✅ Saved lstoid: ${lstoid} $nsp $token");
     print("✅ Saved nxtoid: ${nxtoid}");
   } catch (e) {
     print("❌ Error fetching login data: $e");
@@ -69,8 +70,6 @@ Future<void> fetchDataFromLogin() async {
 
 // ✅ **2. Initialize Background Service**
 Future<void> initializeService() async {
-  
-
   print("🔹 Initializing Background Service...");
   final service = FlutterBackgroundService();
 
@@ -99,7 +98,7 @@ void onStart(ServiceInstance service) async {
         content: "Tracking location in the background...",
       );
     }
-     await fetchDataFromLogin(); // First, load data from SQLite to SharedPreferences
+
     _initializeBackgroundTasks(service);
   } catch (e) {
     print(
@@ -108,14 +107,15 @@ void onStart(ServiceInstance service) async {
 }
 
 Future<void> _initializeBackgroundTasks(ServiceInstance service) async {
-
   print("Now Start the background task:");
   try {
+   
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
     locChangeThreshold = prefs.getString("locChangeThreshold") ?? "10";
     syncIntervalMinutes = prefs.getString("syncIntervalMinutes") ?? "10";
-     print("Now calling stat location update api and sending data on server ");
+    print(
+        "Now calling stat location update api and sending data on server $locChangeThreshold $syncIntervalMinutes ");
     await _startLocationUpdates();
     await _sendDataToServer();
 
@@ -191,8 +191,23 @@ void _recordLocation(Position position) async {
 }
 
 // ✅ **6. Send Batched Location Data to the Server**
+// Updated API call with validation for necessary data
 Future<void> _sendDataToServer() async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  // Ensure necessary data is present
+  String? token = prefs.getString("token");
+  String? nsp = prefs.getString("nsp");
+  String? rid = prefs.getString("rid");
+
+  print(" token is : $token $nsp $rid ");
+
+  if (token == null || nsp == null || rid == null) {
+    print(
+        "❌ Missing necessary data for API call: token=$token, nsp=$nsp, rid=$rid");
+    return; // Skip the API call if necessary data is missing
+  }
+
   if (locationData.isEmpty) return;
 
   List<String> geoList = [];
@@ -209,14 +224,10 @@ Future<void> _sendDataToServer() async {
 
   print("📡 Sending Location Data...");
 
-  String rid = prefs.getString("rid") ?? "10";
-  String token = prefs.getString("token") ?? "10";
-  String nsp = prefs.getString("nsp") ?? "10";
-
   String url =
       "https://portal.aceroute.com/mobi?token=$token&nspace=$nsp&rid=$rid&action=saveresgeo&geo=${geoList.join('|')}&stmp=${timestampList.join('|')}&lstoid=${lstoidList.join('|')}&nxtoid=${nxtoidList.join('|')}";
 
-  print("✅ $url Location data synced successfully.");
+  print("✅ API Call URL: $url");
 
   try {
     var response = await http.get(Uri.parse(url));
