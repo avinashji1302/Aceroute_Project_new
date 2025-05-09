@@ -7,6 +7,7 @@ import 'package:path/path.dart';
 import 'dart:convert';
 
 import '../core/colors/Constants.dart';
+import '../view/ImagePreviewScreen.dart';
 
 class PicUploadController extends GetxController {
   final ImagePicker _picker = ImagePicker();
@@ -16,22 +17,34 @@ class PicUploadController extends GetxController {
   RxList<String> imageNames = <String>[].obs;
   RxList<String> descriptions = <String>[].obs;
 
+  int? eventId;        // Store eventId for the current event
+
+  // Set eventId passed from the screen
+  void setEventId(int id) {
+    eventId = id;
+  }
+
   // ✅ Pick an Image from Camera
   Future<void> pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+
     if (pickedFile != null) {
       File file = File(pickedFile.path);
       if (images.length < 6) {
-        images.add(file);
+       // images.add(file);
+        print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+        print(eventId);
+        Get.to(() => ImagePreviewScreen(imageFile: file, eventId: eventId!));
 
-
-        
       } else {
         Get.snackbar('Limit Reached', 'You can only upload up to 6 images.',
             snackPosition: SnackPosition.BOTTOM);
       }
     }
   }
+
+
+
 
   // ✅ Upload Image to API
   Future<void> uploadImage(File file, String eventId, String fileType, String description) async {

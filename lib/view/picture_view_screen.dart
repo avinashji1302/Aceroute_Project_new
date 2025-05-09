@@ -2,7 +2,6 @@ import 'package:ace_routes/controller/get_media_file.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../core/Constants.dart';
 
 class PictureViewScreen extends StatelessWidget {
   late String id;

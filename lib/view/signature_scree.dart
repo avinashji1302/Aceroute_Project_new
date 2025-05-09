@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:ace_routes/view/sign_preview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
@@ -30,6 +31,7 @@ class _SignatureState extends State<Signature> {
 
   bool isUploading = false; // Track upload status
   final RxInt currentBlock = 0.obs;
+  final TextEditingController _descriptionController = TextEditingController();
 
   @override
   void initState() {
@@ -41,11 +43,6 @@ class _SignatureState extends State<Signature> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      /*appBar: myAppBar(
-        context: context,
-        titleText: AllTerms.signatureLabel,
-        backgroundColor: MyColors.blueColor,
-      ),*/
       appBar: AppBar(
         title: Text(
           "Upload Signatures",
@@ -56,8 +53,9 @@ class _SignatureState extends State<Signature> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.of(context).pop();
+           // Navigator.of(context).pop();
             signatureController.clearImages();
+            Get.offAll(() => HomeScreen());
           },
         ),
         actions: [
@@ -118,7 +116,7 @@ class _SignatureState extends State<Signature> {
               Obx(() => _buildSignatureGrid(context)),
 
               SizedBox(height: 20),
-              _buildAddSignatureButton(context),
+              _buildAddSignatureButton(context,  widget.eventId.toString()),
             ],
           ),
         ),
@@ -202,38 +200,8 @@ class _SignatureState extends State<Signature> {
     );
   }
 
-/*  Widget _buildSignatureBlock(BuildContext context, int index) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        GestureDetector(
-          onTap: () {
-            _showSignatureDialog(context, index);
-          },
-          child: Obx(() {
-            return Icon(
-              Icons.edit,
-              size: 30,
-              color: (index == currentBlock.value &&
-                      signatureController.signatures.length <= index)
-                  ? Colors.black
-                  : Colors.transparent,
-            );
-          }),
-        ),
-        SizedBox(height: 5.0),
-        Obx(() {
-          return signatureController.signatures.length > index
-              ? _buildSignatureDisplay(
-                  index, signatureController.signatures[index])
-              : SizedBox.shrink();
-        }),
-        SizedBox(height: 5.0),
-      ],
-    );
-  }*/
 
-  // Signature dialog UI (already defined in your code)
+  /*// Signature dialog UI (already defined in your code)
   void _showSignatureDialog(BuildContext context, int index) {
     final _signaturePadKey = GlobalKey<SfSignaturePadState>();
 
@@ -276,7 +244,83 @@ class _SignatureState extends State<Signature> {
         );
       },
     );
+  }*/
+
+  void _showSignatureDialog(BuildContext context, int index) {
+    final _signaturePadKey = GlobalKey<SfSignaturePadState>();
+    final TextEditingController _descriptionController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.zero, // Remove padding
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text('Draw your signature'),
+              leading: IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              actions: [
+                IconButton(
+                  tooltip: 'Submit Signature',
+                  icon: Icon(Icons.check, color: Colors.black), // You can use Icons.upload or Icons.done
+                  onPressed: () async {
+                    final signature =
+                    await _signaturePadKey.currentState?.toImage();
+                    if (signature != null) {
+                      signatureController.addSignature(signature);
+                      currentBlock.value++; // Move to the next block
+                    }
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+
+
+
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: Container(
+                      width: double.infinity,
+                      color: Colors.grey[200],
+                      child: SfSignaturePad(
+                        key: _signaturePadKey,
+                        backgroundColor: Colors.grey[200],
+                        strokeColor: Colors.black,
+                        minimumStrokeWidth: 1.0,
+                        maximumStrokeWidth: 4.0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      controller: _descriptionController,
+                      maxLines: 1,
+                      decoration: const InputDecoration(
+                        labelText: "Description",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
+
+
 
   // Build file meta data list
   Widget _buildFileMetaDataList() {
@@ -322,9 +366,6 @@ class _SignatureState extends State<Signature> {
               right: 0,
               child: IconButton(
                 icon: Icon(Icons.delete, color: Colors.red),
-                // onPressed: () {
-                //   _showDeleteConfirmationDialog(context, index);
-                // },
                 onPressed: () {
                   String eventId = eventController.events[index].id; // Get event ID
                   _showDeleteConfirmationDialog(context, index, eventId);
@@ -393,10 +434,10 @@ class _SignatureState extends State<Signature> {
   }
 
   // Add signature button (already defined in your code)
-  Widget _buildAddSignatureButton(BuildContext context) {
+  Widget _buildAddSignatureButton(BuildContext context,  String eventId) {
     return Center(
       child: ElevatedButton(
-        onPressed: () {
+      /*  onPressed: () {
           if (signatureController.signatures.length <
               signatureController.maxSignatures) {
             _showSignatureDialog(context, currentBlock.value);
@@ -407,7 +448,26 @@ class _SignatureState extends State<Signature> {
               snackPosition: SnackPosition.BOTTOM,
             );
           }
+        },*/
+        onPressed: () {
+          if (signatureController.signatures.length < signatureController.maxSignatures) {
+            print('<<<<<<<<>>>>>>>>>>>');
+            print(eventId);
+            Get.to(() => AddSignatureScreen(
+              blockIndex: currentBlock.value,
+              eventId: eventId, // Replace '12345' with the actual event ID
+            ));
+          } else {
+            Get.snackbar(
+              'Limit Reached',
+              'You have reached the maximum number of signatures',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+          }
         },
+
         child: Text('Add Signature'),
       ),
     );

@@ -26,6 +26,9 @@ class _PicUploadScreenState extends State<PicUploadScreen> {
   void initState() {
     super.initState();
     fileMetaController.fetchFileImageDataFromDatabase(widget.eventId.toString());
+    fileMetaController.fetchFileImageDataFromDatabase(widget.eventId.toString());
+    controller.setEventId(widget.eventId);  // Use widget.eventId instead of eventId
+
   }
 
   @override
@@ -41,11 +44,12 @@ class _PicUploadScreenState extends State<PicUploadScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.of(context).pop();
+           // Navigator.of(context).pop();
             controller.clearImages();
+            Get.offAll(() => HomeScreen());
           },
         ),
-        actions: [
+      /*  actions: [
           IconButton(
             onPressed: () async {
               if (isUploading) return; // Prevent multiple clicks
@@ -73,7 +77,7 @@ class _PicUploadScreenState extends State<PicUploadScreen> {
                   : Icon(Icons.file_upload_outlined, color: Colors.white),
             ),
           ),
-        ],
+        ],*/
 
       ),
       body: Padding(
@@ -97,6 +101,7 @@ class _PicUploadScreenState extends State<PicUploadScreen> {
                   if (index == controller.images.length) {
                     return GestureDetector(
                       onTap: () async {
+
                         await controller.pickImage(); // ✅ Pick image when tapped
                       },
                       child: Container(
@@ -174,13 +179,13 @@ class _PicUploadScreenState extends State<PicUploadScreen> {
               decoration: InputDecoration(labelText: "Image Name"),
             ),
           ),*/
-          Padding(
+         /* Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               onChanged: (val) => controller.setImageDescription(index, val),
               decoration: InputDecoration(labelText: "Description"),
             ),
-          ),
+          ),*/
           IconButton(
             icon: Icon(Icons.delete, color: Colors.red),
             onPressed: () => controller.deleteImage(index),
@@ -208,47 +213,6 @@ class _PicUploadScreenState extends State<PicUploadScreen> {
       },
     );
   }
-
-
-
-
-
-
-  // Create the file metadata block
- /* Widget _buildFileMetaBlock(var fileMeta) {
-    return GestureDetector(
-      onTap: () {
-        print(fileMeta.id);
-        Get.to(PictureViewScreen(
-          id: fileMeta.id,
-        ));
-      },
-      child: Container(
-        padding: EdgeInsets.all(8.0),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black),
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              fileMeta.fname ?? 'No Name',
-              style: TextStyle(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            Text(
-              fileMeta.dtl ?? 'No Description',
-              style: TextStyle(fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-*/
 
 
   Widget _buildFileMetaBlock(var fileMeta) {
@@ -300,7 +264,7 @@ class _PicUploadScreenState extends State<PicUploadScreen> {
   }
 
   /// Function to show the delete confirmation dialog
-  void _showDeleteDialog(String mediaId, String eventId) {
+ /* void _showDeleteDialog(String mediaId, String eventId) {
     Get.defaultDialog(
       title: "Confirm Deletion",
       content: Text("Are you sure you want to delete this media file?"),
@@ -332,8 +296,61 @@ class _PicUploadScreenState extends State<PicUploadScreen> {
         ),
       ],
     );
-  }
+  }*/
 
+  void _showDeleteDialog(String mediaId, String eventId) {
+    Get.defaultDialog(
+      title: "Confirm Deletion",
+      content: Text("Are you sure you want to delete this media file?"),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(), // Cancel
+          child: Text("Cancel"),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            Get.back(); // Close dialog
+            int parsedMediaId = int.tryParse(mediaId) ?? 0;
+
+            if (parsedMediaId != 0) {
+              bool success = await fileMetaController.deleteMedia(mediaId, eventId);
+
+              if (success) {
+                await fileMetaController.fetchFileImageDataFromDatabase(widget.eventId.toString());
+
+                Get.defaultDialog(
+                  title: "Deleted",
+                  content: Column(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green, size: 50),
+                      SizedBox(height: 10),
+                      Text("Media deleted successfully!", textAlign: TextAlign.center),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          controller.clearImages();
+                          Get.back(); // Close dialog
+                         // Get.offAll(() => HomeScreen()); // Navigate home
+                        },
+                        child: Text("OK"),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                Get.snackbar("Error", "Failed to delete media.",
+                    backgroundColor: Colors.red, colorText: Colors.white);
+              }
+            } else {
+              Get.snackbar("Error", "Invalid media ID",
+                  backgroundColor: Colors.red, colorText: Colors.white);
+            }
+          },
+          child: Text("OK"),
+        ),
+      ],
+    );
+  }
 
   /// ✅ Show Success Dialog
   void _showSuccessDialog() {
