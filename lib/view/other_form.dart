@@ -1,259 +1,276 @@
 import 'dart:io';
 
-import 'package:ace_routes/controller/addBwForm_controller.dart';
+import 'package:ace_routes/controller/dynamic_form_controller.dart';
+import 'package:ace_routes/controller/eform_data_controller.dart';
+import 'package:ace_routes/core/Constants.dart';
+import 'package:ace_routes/core/colors/Constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import '../core/colors/Constants.dart';
-import '../model/GTypeModel.dart';
 
-class OtherForm extends StatefulWidget {
-  final GTypeModel gType;
+import 'package:http/http.dart' as http;
+
+class DynamicFormPage extends StatelessWidget {
+  final String id;
+  final List<dynamic> frm;
   final String oid;
+  final String name;
+  final String ftid;
+  final controller = Get.put(DynamicFormController());
+  final eformDataControlle = Get.find<EFormDataController>();
 
-  const OtherForm({Key? key, required this.gType, required this.oid})
-      : super(key: key);
+  DynamicFormPage(
+      {required this.id,
+      required this.frm,
+      required this.name,
+      required this.oid,
+      required this.ftid,
+      super.key});
 
-  @override
-  State<OtherForm> createState() => _OtherFormState();
-}
+  
 
-class _OtherFormState extends State<OtherForm> {
-  final controller = Get.put(AddBwFormController());
+  void populateFormValues(List<dynamic> frm) {
+    for (var field in frm) {
+      final tid = field['tid'];
+      final name = field['nm'];
 
-  @override
-  void initState() {
-    super.initState();
-    controller.initializeTextControllers(widget.gType.details['frm']);
+      switch (tid) {
+        case 1: // Text field
+          field['val'] = controller.textControllers[name]?.text ?? '';
+          break;
+        case 8: // Radio
+          field['val'] = controller.selectedRadio[name] ?? '';
+          break;
+        case 9: // Multi-select
+          final selectedOptions = controller.selectedMulti[name];
+          field['val'] =
+              selectedOptions != null ? selectedOptions.join(',') : '';
+          break;
+        case 13: // Image
+          // We'll handle the upload separately and set this below
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  Future<void> uploadImage(String frmkey, XFile imageFile) async {
+    final url = Uri.parse(
+        "https://$baseUrl/mobi?token=$token&nspace=$nsp&rid=$rid&action=fileupload");
+
+    var request = http.MultipartRequest('POST', url);
+    request.fields['frmkey'] = frmkey;
+    request.files
+        .add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      print('Image upload successful');
+    } else {
+      print('Image upload failed');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    bool hasImageField = frm.any((e) => e['tid'] == 13);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.gType.name,
-          style: const TextStyle(color: Colors.white),
+          name,
+          style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: MyColors.blueColor,
         centerTitle: true,
+        backgroundColor: Colors.blue[900],
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
         ),
         actions: [
           IconButton(
-              onPressed: () async {
-                await controller.submitForm(
-                  geo: "28.6139,77.2090", // Replace with actual location
+            icon: Icon(
+              Icons.done,
+              color: Colors.white,
+              size: 40.0,
+            ),
+            onPressed: () async {
+              print('Dam $frm $ftid $oid');
 
-                  oid: widget.oid,
-                  formId: "0", // Or actual ID if editing
-                  ftid: widget.gType.id.toString(),
-                  formFields: widget.gType.details['frm'],
-                );
-                print("eform save is clicked ::");
+              //  geo: "28.6139,77.2090", // Replace with actual location
 
-                Navigator.of(context).pop();
-              },
-              icon: Icon(
-                Icons.done,
-                color: Colors.white,
-                size: 30.0,
-              ))
+              //       oid: widget.oid,
+              //       formId: "0", // Or actual ID if editing
+              //       ftid: widget.gType.id.toString(),
+              //       formFields: widget.gType.details['frm'],
+
+              final frmkey = DateTime.now().millisecondsSinceEpoch.toString();
+
+              populateFormValues(frm);
+
+              // if (hasImageField && controller.pickedImage.value != null) {
+              //   await uploadImage(frmkey, controller.pickedImage.value!);
+              //   frm.firstWhere((e) => e['tid'] == 13)['val'] =
+              //       controller.pickedImage.value!.name;
+              // }
+
+              controller.submitForm(
+                  id, '28.6139,77.2090', oid, '0', ftid, name, frm, frmkey);
+              print("eform save is clicked ::");
+              eformDataControlle.loadFormsFromDb();
+              Navigator.of(context).pop();
+            },
+          ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: widget.gType.details['frm']
-                .map<Widget>((item) => buildFormField(item))
-                .toList(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var field in frm) ..._buildField(field),
+            if (!hasImageField)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text("No image field found. Here's your form."),
+              ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildField(Map<String, dynamic> field) {
+    final tid = field['tid'];
+    final name = field['nm'];
+    final label = field['lbl'] ?? '';
+
+    switch (tid) {
+      case 1: // Text input
+        controller.textControllers.putIfAbsent(
+          name,
+          () => TextEditingController(),
+        );
+        return [
+          TextField(
+            controller: controller.textControllers[name],
+            decoration: InputDecoration(
+              hintText: '$label',
+              border: OutlineInputBorder(),
+            ),
           ),
-        ),
-      ),
-    );
-  }
+          const SizedBox(height: 16),
+        ];
 
-  Widget buildFormField(Map<String, dynamic> item) {
-    switch (item['id']) {
-      case 1: // For text fields
-        return buildTextField(item);
-      case 2: // For radio buttons
-        return buildRadioOptions(item);
-      case 3: // For image picker
-        return buildImagePicker(item);
-      case 4: // For multi-select options
-        return buildMultiSelectOptions(item);
-      default:
-        return Container(); // Empty container for unsupported IDs
-    }
-  }
+      case 8: // Radio
+        final options = (field['ddn'] as String?)?.split(',') ?? [];
+        // List<String> values = field['ddnval'].split(',');
+        // Group options in chunks of 2
+        List<List<String>> optionPairs = [];
+        for (int i = 0; i < options.length; i += 2) {
+          optionPairs.add(options.sublist(
+              i, i + 2 > options.length ? options.length : i + 2));
+        }
 
-  // TextField for technician name
-  Widget buildTextField(Map<String, dynamic> item) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextFormField(
-        controller: controller.textEditingControllers[item['nm']],
-        decoration: InputDecoration(
-          labelText: item['lbl'],
-          border: const OutlineInputBorder(),
-        ),
-      ),
-    );
-  }
-
-  Widget buildRadioOptions(Map<String, dynamic> item) {
-    List<String> options = item['ddn'].split(',');
-    List<String> values = item['ddnval'].split(',');
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(item['lbl'],
-              style: const TextStyle(fontWeight: FontWeight.bold)),
-          Column(
-            children: [
-              for (int i = 0; i < options.length; i += 2)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Obx(
-                        () => RadioListTile<String>(
-                          title: Text(options[i]),
-                          value: values[i],
-                          groupValue: controller.selectedValue.value,
-                          onChanged: (newValue) {
-                            controller.selectedValue.value = newValue!;
-                          },
+        return [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Obx(() => Column(
+                children: optionPairs.map((pair) {
+                  return Row(
+                    children: pair.map((opt) {
+                      return Expanded(
+                        child: RadioListTile<String>(
+                          value: opt,
+                          groupValue: controller.selectedRadio[name],
+                          title: Flexible(
+                              child: Text(
+                            opt,
+                            softWrap: true,
+                          )),
+                          onChanged: (val) =>
+                              controller.selectedRadio[name] = val!,
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
                         ),
-                      ),
+                      );
+                    }).toList(),
+                  );
+                }).toList(),
+              )),
+          const SizedBox(height: 16),
+        ];
+
+      case 9: // Multi-select
+        final options = (field['ddn'] as String?)?.split(',') ?? [];
+        return [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Obx(() => Column(
+                children: options.map((opt) {
+                  final selected =
+                      controller.selectedMulti[name]?.contains(opt) ?? false;
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      opt,
+                      softWrap: true,
                     ),
-                    if (i + 1 < options.length)
-                      Expanded(
-                        child: Obx(
-                          () => RadioListTile<String>(
-                            title: Text(options[i + 1]),
-                            value: values[i + 1],
-                            groupValue: controller.selectedValue.value,
-                            onChanged: (newValue) {
-                              controller.selectedValue.value = newValue!;
-                            },
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-            ],
+                    trailing: Checkbox(
+                      value: selected,
+                      onChanged: (_) => controller.toggleMultiSelect(name, opt),
+                    ),
+                    onTap: () => controller.toggleMultiSelect(name, opt),
+                  );
+                }).toList(),
+              )),
+          const SizedBox(height: 16),
+        ];
+
+      case 13: // Image picker
+        return [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: controller.pickImage,
+            icon: const Icon(Icons.add_a_photo),
+            label: const Text("Pick or Capture Image"),
           ),
-        ],
-      ),
-    );
-  }
-
-  // Multi-select for options
-  Widget buildMultiSelectOptions(Map<String, dynamic> item) {
-    List<String> options = item['ddn'].split(',');
-    List<String> values = item['ddnval'].split(',');
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(item['lbl'],
-              style: const TextStyle(fontWeight: FontWeight.bold)),
-          ...List.generate(options.length, (index) {
-            return Obx(
-              () => CheckboxListTile(
-                title: Text(
-                  options[index],
-                  style: TextStyle(
-                    color: controller.selectedValues.contains(values[index])
-                        ? Colors.blue
-                        : Colors.black,
-                  ),
+          const SizedBox(height: 8),
+          Obx(() {
+            final image = controller.pickedImage.value;
+            if (image == null) return const SizedBox();
+            return Container(
+              width: double.infinity,
+              height: 150,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  File(image.path),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: 150,
                 ),
-                value: controller.selectedValues.contains(values[index]),
-                onChanged: (isSelected) {
-                  if (isSelected == true) {
-                    controller.selectedValues.add(values[index]);
-                  } else {
-                    controller.selectedValues.remove(values[index]);
-                  }
-                },
               ),
             );
           }),
-        ],
-      ),
-    );
-  }
+          const SizedBox(height: 16),
+        ];
 
-  // Image picker for uploading an image
-  Widget buildImagePicker(Map<String, dynamic> item) {
-    return Column(
-      children: [
-        const SizedBox(height: 10),
-        Text(item['lbl'], style: const TextStyle(fontSize: 16)),
-        const SizedBox(height: 10),
-        GestureDetector(
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              builder: (_) {
-                return SafeArea(
-                  child: Wrap(
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.photo_camera),
-                        title: const Text('Take a picture'),
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          controller.pickImage(ImageSource.camera);
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.photo_library),
-                        title: const Text('Choose from gallery'),
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          controller.pickImage(ImageSource.gallery);
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-          child: Obx(
-            () => Container(
-              height: 150,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: controller.selectedImage.value == null
-                  ? const Center(
-                      child:
-                          Icon(Icons.camera_alt, size: 50, color: Colors.grey),
-                    )
-                  : Image.file(
-                      File(controller.selectedImage.value!.path),
-                      fit: BoxFit.cover,
-                    ),
-            ),
-          ),
-        ),
-      ],
-    );
+      default:
+        return [];
+    }
   }
 }

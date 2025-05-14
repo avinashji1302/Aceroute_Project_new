@@ -53,7 +53,7 @@ class EformSelect extends StatelessWidget {
                       onTap: () {
                         Navigator.of(context).pop();
 
-                        print(" Tapped : ${gType}  ${gType.details}");
+                        print(" Tapped : ${gType}  ${gType.name}");
 
                         // if (gType.id == 'BW Form') {
                         //   Get.to(AddBwForm(gType: gType, oid: oid));
@@ -63,7 +63,7 @@ class EformSelect extends StatelessWidget {
                         //   Get.to(OtherForm(gType: gType, oid: oid));
                         // }
 
-                        Get.to(OtherForm(gType: gType, oid: oid));
+                        Get.to(DynamicFormPage(id: gType.id, frm :gType.details['frm'], name: gType.name, oid: oid, ftid: gType.id.toString()));
                       },
                       title: Text("${gType.name}  ${gType.id}"),
                     ),

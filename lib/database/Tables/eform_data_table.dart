@@ -6,8 +6,8 @@ import 'package:sqflite/sqflite.dart';
 class EFormDataTable {
   static const String tableName = 'eFormsDataTable';
 
-  // Table creation method
   static Future<void> onCreate(Database db) async {
+    print("Creating table: $tableName");
     await db.execute('''
       CREATE TABLE $tableName (
         id TEXT PRIMARY KEY,
@@ -21,96 +21,37 @@ class EFormDataTable {
     ''');
   }
 
-  // Insert data method - Serialize formFields to JSON string before saving
-  static Future<void> insertEForm(EFormDataModel eForm) async {
+  static Future<void> insertEForm(EFormDataModel model) async {
     final db = await DatabaseHelper().database;
-    // Convert formFields to JSON string before saving
-    final formFieldsJson = json.encode(eForm.formFields);
-    final data = {
-      'id': eForm.id,
-      'oid': eForm.oid,
-      'ftid': eForm.ftid,
-      'frmKey': eForm.frmKey,
-      'formFields': formFieldsJson,
-      'updatedTimestamp': eForm.updatedTimestamp,
-      'updatedBy': eForm.updatedBy,
-    };
+    print("Inserting into $tableName: ${model.toMap()}");
 
-    await db.insert(tableName, data,
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      tableName,
+      model.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    print("Insert complete.");
   }
 
-  static Future<void> insertMultipleEForms(List<EFormDataModel> eForms) async {
+  static Future<List<EFormDataModel>> getAllEFormsFromDb() async {
     final db = await DatabaseHelper().database;
-    final batch = db.batch();
-    for (var eForm in eForms) {
-      final formFieldsJson = json.encode(eForm.formFields);
-      final data = {
-        'id': eForm.id,
-        'oid': eForm.oid,
-        'ftid': eForm.ftid,
-        'frmKey': eForm.frmKey,
-        'formFields': formFieldsJson,
-        'updatedTimestamp': eForm.updatedTimestamp,
-        'updatedBy': eForm.updatedBy,
-      };
+    print("Querying all forms from $tableName...");
+    final result = await db.query(tableName);
 
-      // Add insert operation to batch
-      batch.insert(tableName, data,
-          conflictAlgorithm: ConflictAlgorithm.ignore);
-    }
-
-    // Execute all the operations in the batch
-    await batch.commit();
+    print("Total rows fetched: ${result.length}");
+    return result.map((json) {
+      final map = Map<String, dynamic>.from(json);
+      map['formFields'] = jsonDecode(map['formFields']);
+      return EFormDataModel.fromJson(map);
+    }).toList();
   }
 
-// Fetch all EForm data from the database
-static Future<List<Map<String, dynamic>>> fetchAllEForms() async {
-  final db = await DatabaseHelper().database;
-  final result = await db.query(tableName); // No 'where' clause needed to fetch all
-
-  return result.isNotEmpty ? result : [];
-}
-
-
-  // Fetch EForm by ID
-  static Future<Map<String, dynamic>?> fetchEFormById(String id) async {
+  static Future<void> deleteForm(String id) async {
     final db = await DatabaseHelper().database;
-    final result = await db.query(tableName, where: 'id = ?', whereArgs: [id]);
-    return result.isNotEmpty ? result.first : null;
-  }
 
-  // Fetch and deserialize EForm by ID
-  static Future<EFormDataModel?> getEFormById(String id) async {
-    try {
-      final result = await fetchEFormById(id);
-      if (result != null) {
-        // Deserialize formFields from JSON string to Map<String, dynamic>
-        final formFieldsJson = result['formFields'];
-        final formFields =
-            formFieldsJson != null ? json.decode(formFieldsJson) : {};
+    final response =
+        await db.delete(tableName, where: 'id = ? ', whereArgs: [id]);
 
-        return EFormDataModel(
-          id: result['id'],
-          oid: result['oid'],
-          ftid: result['ftid'],
-          frmKey: result['frmKey'],
-          formFields: formFields, // Store as Map<String, dynamic>
-          updatedTimestamp: result['updatedTimestamp'],
-          updatedBy: result['updatedBy'],
-        );
-      }
-    } catch (e) {
-      print('Error while fetching EForm from the database: $e');
-    }
-    return null;
-  }
-
-  static Future<int> getEFormCountByTid(String tid) async {
-    final db = await DatabaseHelper().database;
-    final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM $tableName WHERE ftid = ?', [tid]);
-
-    return Sqflite.firstIntValue(result) ?? 0;
+    print('response deleted successfully : $response');
   }
 }
