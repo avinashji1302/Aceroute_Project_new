@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:ace_routes/controller/file_meta_controller.dart';
 import 'package:ace_routes/view/pic_upload_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -19,6 +20,8 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
   final TextEditingController descriptionController = TextEditingController();
   bool isUploading = false;
 
+  final FileMetaController fileMetaController = Get.find<FileMetaController>();
+
   void _uploadImage(PicUploadController controller) async {
     if (isUploading) return;
 
@@ -38,6 +41,9 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
       isUploading = false;
     });
 
+    fileMetaController
+        .fetchFileImageDataFromDatabase(widget.eventId.toString());
+
     Get.to(() => PicUploadScreen(eventId: widget.eventId));
   }
 
@@ -51,24 +57,26 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
         actions: [
           isUploading
               ? Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: SizedBox(
-              height: 24,
-              width: 24,
-              child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
-            ),
-          )
+                  padding: const EdgeInsets.all(12.0),
+                  child: SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                        color: Colors.black, strokeWidth: 2),
+                  ),
+                )
               : IconButton(
-            icon: Icon(Icons.cloud_upload),
-            tooltip: 'Upload Image',
-            onPressed: () => _uploadImage(controller),
-          ),
+                  icon: Icon(Icons.cloud_upload),
+                  tooltip: 'Upload Image',
+                  onPressed: () => _uploadImage(controller),
+                ),
         ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: Image.file(widget.imageFile, fit: BoxFit.cover, width: double.infinity),
+            child: Image.file(widget.imageFile,
+                fit: BoxFit.cover, width: double.infinity),
           ),
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -81,16 +89,6 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
               ),
             ),
           ),
-          /*ElevatedButton(
-            onPressed: isUploading ? null : () => _uploadImage(controller),
-            child: isUploading
-                ? SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-            )
-                : Text("Upload & Continue"),
-          ),*/
           SizedBox(height: 10),
         ],
       ),

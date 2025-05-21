@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:ace_routes/controller/clockout/clockout_controller.dart';
 import 'package:ace_routes/controller/getOrderPart_controller.dart';
@@ -9,11 +10,13 @@ import 'package:ace_routes/database/offlineTables/add_form_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/clockout_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/order_part_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/status_sync_table.dart';
+import 'package:ace_routes/database/offlineTables/upload_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/vehicle_sync_table.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
 
 class NetworkController extends GetxController {
   final Connectivity _connectivity = Connectivity();
@@ -70,6 +73,7 @@ class NetworkController extends GetxController {
         await _syncOrderParts();
         await _syncClockOutData();
         await _syncAddFormData();
+        await _syncPendingUploads();
         print("🔄 Syncing data...");
       } else {
         print("⚠️ Skipping sync — login not completed.");
@@ -247,6 +251,63 @@ class NetworkController extends GetxController {
     }
   }
 
+  Future<void> _syncPendingUploads() async {
+    List<Map<String, dynamic>> unsynced = await UploadSyncTable.getUnsynced();
+
+    for (var item in unsynced) {
+      final file = File(item['file_path']);
+      if (!file.existsSync()) {
+        print("⚠️ File does not exist: ${item['file_path']}");
+        continue;
+      }
+
+      try {
+        final request = http.MultipartRequest(
+          "POST",
+          Uri.parse("https://$baseUrl/fileupload"),
+        );
+
+        final mimeType = item['file_type'] == "1" ? "mp3" : "jpg";
+
+        print("$item[mimeType]  $item['description']");
+
+        request.fields.addAll({
+          'token': "$token",
+          'nspace': "$nsp",
+          'geo': "$geo",
+          'rid': "$rid",
+          'oid': item['event_id'],
+          'stmp': item['timestamp'],
+          'tid': item['file_type'],
+          'mime': mimeType,
+          'dtl': item['description'] ?? '',
+          'frmkey': "",
+          'frmfldid': "",
+        });
+
+        request.files.add(await http.MultipartFile.fromPath(
+          'binaryFile',
+          file.path,
+          filename: p.basename(file.path),
+        ));
+
+        final response = await request.send();
+
+        if (response.statusCode == 200) {
+          print("✅ File uploaded successfully for ID: ${item['id']}");
+          await UploadSyncTable.markSynced(item['id']);
+
+          print("Synced image successfully : ");
+        } else {
+          print(
+              "❌ Upload failed with status ${response.statusCode} for ID: ${item['id']}");
+        }
+      } catch (e) {
+        print("❌ Exception during sync for ID ${item['id']}: $e");
+      }
+    }
+  }
+
   /// Call this method **after login is complete** to allow syncing
   void enableSyncAfterLogin() {
     canSync = true;
@@ -257,6 +318,7 @@ class NetworkController extends GetxController {
       _syncOrderParts();
       _syncClockOutData();
       _syncAddFormData();
+      _syncPendingUploads();
     }
   }
 
@@ -277,5 +339,6 @@ class NetworkController extends GetxController {
     await _syncOrderParts();
     await _syncClockOutData();
     await _syncAddFormData();
+    await _syncPendingUploads();
   }
 }

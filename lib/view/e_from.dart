@@ -1,16 +1,9 @@
-import 'dart:convert';
-
 import 'package:ace_routes/Widgets/dismissed.dart';
 import 'package:ace_routes/controller/eform_data_controller.dart';
 import 'package:ace_routes/core/Constants.dart';
-import 'package:ace_routes/database/Tables/eform_data_table.dart';
-import 'package:ace_routes/model/eform_data_model.dart';
-import 'package:ace_routes/view/add_bw_from.dart';
 import 'package:ace_routes/view/other_form.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import '../controller/eform_controller.dart';
 import '../controller/fontSizeController.dart';
 import 'eForm_select.dart';
@@ -19,10 +12,11 @@ class EFormScreen extends StatefulWidget {
   final String tid; // Declare a final variable to hold the tid
   final String oid;
 
-  EFormScreen(
-      {super.key,
-      required this.tid,
-      required this.oid}); // Add tid to the constructor
+  EFormScreen({
+    super.key,
+    required this.tid,
+    required this.oid,
+  }); // Add tid to the constructor
 
   @override
   State<EFormScreen> createState() => _EFormScreenState();
@@ -41,7 +35,7 @@ class _EFormScreenState extends State<EFormScreen> {
     Get.find<EFormController>().GetGenOrderDataForForm(widget.tid);
     //   eFormDataController.fetchSavedDataFromDb();
     eFormDataController.loadFormsFromDb();
-    print("eform called");
+
     print("eform called oid :  ${widget.oid}  tid ${widget.tid}");
   }
 
@@ -107,9 +101,23 @@ class _EFormScreenState extends State<EFormScreen> {
                     await eFormDataController.deleteForm(form.id);
                     // await eFormDataController.loadFormsFromDb();
                   } else if (direction == DismissDirection.startToEnd) {
-                    print("Editing the app");
+                    print("Editing exting form id the app  ${form.id}");
 
-                    // Get.to(DynamicFormPage(id: id, frm: frm, name: name, oid: oid, ftid: ftid));
+                    // Edit action
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DynamicFormPage(
+                          id: form.id,
+                          frm: form.formFields,
+                          name: AllTerms.formName.value,
+                          oid: widget.oid,
+                          ftid: widget.tid,
+                          isEditMode: true,
+                          editOrsaveId: form.id,
+                        ),
+                      ),
+                    );
                   }
                 },
                 child: Container(
@@ -122,11 +130,11 @@ class _EFormScreenState extends State<EFormScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Form ID: ${form.id}',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16)),
-                          SizedBox(height: 5),
-                          Text('Form Values:',
+                          // Text('Form ID: ${form.id}  :',
+                          //     style: TextStyle(
+                          //         fontWeight: FontWeight.bold, fontSize: 16)),
+                          // SizedBox(height: 5),
+                          Text('${form.formFields[0]['lbl']}',
                               style: TextStyle(fontWeight: FontWeight.bold)),
                           ...form.formFields.map<Widget>((field) {
                             final val = field['lst']?.toString() == '1'
@@ -134,8 +142,8 @@ class _EFormScreenState extends State<EFormScreen> {
                                 : '';
                             return Padding(
                               padding:
-                                  const EdgeInsets.symmetric(vertical: 4.0),
-                              child: Text('val: $val'),
+                                  const EdgeInsets.symmetric(vertical: 0.0),
+                              child: Text('$val'),
                             );
                           }).toList(),
                         ],

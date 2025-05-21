@@ -3,8 +3,6 @@ import 'dart:convert'; // <-- Add this import for jsonEncode
 import 'package:ace_routes/database/databse_helper.dart';
 import 'package:sqflite/sqflite.dart';
 
-
-
 class AddFormSyncTable {
   static const String tableName = 'form_sync';
 
@@ -32,7 +30,7 @@ class AddFormSyncTable {
     required String formId,
     required String ftid,
     required String name,
-    required List<dynamic> frm,
+    required List<dynamic> frm, // Accepts List<dynamic>
     required String frmkey,
     required String action,
   }) async {
@@ -46,7 +44,7 @@ class AddFormSyncTable {
         'form_id': formId,
         'ftid': ftid,
         'name': name,
-        'frm': jsonEncode(frm),
+        'frm': jsonEncode(frm), // Store as JSON string
         'frmkey': frmkey,
         'action': action,
         'synced': 0,
@@ -72,4 +70,7 @@ class AddFormSyncTable {
     await db.delete(tableName, where: 'synced = ?', whereArgs: [1]);
     print("🧹 Cleared all synced form records.");
   }
+
+
+  
 }

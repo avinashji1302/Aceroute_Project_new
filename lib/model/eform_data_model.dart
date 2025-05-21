@@ -5,7 +5,7 @@ class EFormDataModel {
   final String oid;
   final String ftid;
   final String frmKey;
-  final List<dynamic> formFields; // <- Changed from Map to List
+  final List<dynamic> formFields;
   final String updatedTimestamp;
   final String updatedBy;
 
@@ -20,14 +20,30 @@ class EFormDataModel {
   });
 
   factory EFormDataModel.fromJson(Map<String, dynamic> json) {
+    // Handle formFields conversion
+    dynamic formFieldsData = json['formFields'];
+    List<dynamic> formFieldsList = [];
+
+    if (formFieldsData is String) {
+      try {
+        formFieldsData = jsonDecode(formFieldsData);
+      } catch (e) {
+        print('Error decoding formFields string: $e');
+      }
+    }
+
+    if (formFieldsData is Map && formFieldsData.containsKey('frm')) {
+      formFieldsList = formFieldsData['frm'];
+    } else if (formFieldsData is List) {
+      formFieldsList = formFieldsData;
+    }
+
     return EFormDataModel(
       id: json['id'] ?? '',
       oid: json['oid'] ?? '',
       ftid: json['ftid'] ?? '',
       frmKey: json['frmKey'] ?? '',
-      formFields: json['formFields'] != null
-          ? List<dynamic>.from(json['formFields'])
-          : [],
+      formFields: formFieldsList,
       updatedTimestamp: json['updatedTimestamp'] ?? '',
       updatedBy: json['updatedBy'] ?? '',
     );
@@ -39,7 +55,7 @@ class EFormDataModel {
       'oid': oid,
       'ftid': ftid,
       'frmKey': frmKey,
-      'formFields': json.encode(formFields), // Store as JSON string
+      'formFields': jsonEncode(formFields),
       'updatedTimestamp': updatedTimestamp,
       'updatedBy': updatedBy,
     };

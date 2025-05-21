@@ -55,7 +55,9 @@ class _SignatureState extends State<Signature> {
           onPressed: () {
            // Navigator.of(context).pop();
             signatureController.clearImages();
-            Get.offAll(() => HomeScreen());
+            // Get.offAll(() => HomeScreen());
+
+             Get.to(()=>HomeScreen());
           },
         ),
         actions: [

@@ -239,7 +239,8 @@ class _AudioRecordState extends State<AudioRecord> {
           onPressed: () {
 
             _controller.clearAudio();
-            Get.offAll(() => HomeScreen());
+            // Get.offAll(() => HomeScreen());
+             Get.to(()=>HomeScreen());
           },
         ),
         actions: [

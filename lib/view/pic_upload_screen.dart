@@ -44,9 +44,10 @@ class _PicUploadScreenState extends State<PicUploadScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-           // Navigator.of(context).pop();
-            controller.clearImages();
-            Get.offAll(() => HomeScreen());
+          //  Navigator.of(context).pop();
+          //  controller.clearImages();
+      // Get.to(()=>HomeScreen());
+          Get.back();
           },
         ),
       /*  actions: [

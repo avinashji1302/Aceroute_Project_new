@@ -175,38 +175,6 @@ class FileMetaController extends GetxController {
     }
   }
 
-/*  Future<void> deleteSignatureFromServer(String fileId) async {
-    final String url = "https://portal.aceroute.com/mobi?"
-        "token=$token"
-        "&nspace=$nsp"
-        "&geo=$geo"
-        "&rid=$rid"
-        "&action=deletefile"
-        "&id=$fileId";
-    print("🔹 Delete SIGN Request URL: $url");
-
-    try {
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        fileMetaData.removeWhere((file) => file.id == fileId);
-
-        if (signatureCounts.containsKey(fileId) &&
-            signatureCounts[fileId]! > 0) {
-          signatureCounts[fileId] = signatureCounts[fileId]! - 1;
-        }
-        update();
-        print("✅ Signature deleted successfully.");
-        Get.snackbar("Success", "Signature deleted successfully.");
-      } else {
-        print("❌ Failed to delete signature: ${response.reasonPhrase}");
-        Get.snackbar("Error", "Failed to delete signature.");
-      }
-    } catch (e) {
-      print("❌ Error: $e");
-      Get.snackbar("Error", "An error occurred while deleting.");
-    }
-  }*/
 
   Future<void> deleteSignatureFromServer(String fileId, String eventId) async {
     final String url = "https://portal.aceroute.com/mobi?"

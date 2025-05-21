@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:ace_routes/controller/dynamic_form_controller.dart';
 import 'package:ace_routes/controller/eform_data_controller.dart';
-import 'package:ace_routes/core/Constants.dart';
 import 'package:ace_routes/core/colors/Constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -16,18 +15,91 @@ class DynamicFormPage extends StatelessWidget {
   final String oid;
   final String name;
   final String ftid;
-  final controller = Get.put(DynamicFormController());
+  final bool isEditMode;
+  final String editOrsaveId;  // 0 for save existing id  for edit
+  final DynamicFormController controller;
   final eformDataControlle = Get.find<EFormDataController>();
 
-  DynamicFormPage(
-      {required this.id,
-      required this.frm,
-      required this.name,
-      required this.oid,
-      required this.ftid,
-      super.key});
+  DynamicFormPage({
+    required this.id,
+    required this.frm,
+    required this.name,
+    required this.oid,
+    required this.ftid,
+    required this.editOrsaveId,
+    this.isEditMode = false,
+    Key? key,
+  })  : controller = Get.put(DynamicFormController()),
+        super(key: key) {
+    // Initialize form data
+    _initializeFormData(frm);
+  }
 
-  
+  void _initializeFormData(List<dynamic> fields) {
+    if (!isEditMode) return;
+
+    for (var field in fields) {
+      final tid = field['tid'];
+      final name = field['nm'];
+      final value = field['val'];
+
+      switch (tid) {
+        case 1: // Text field
+          controller.textControllers[name] =
+              TextEditingController(text: value?.toString() ?? '');
+          break;
+
+        case 8: // Radio
+          if (value != null) {
+            final options = (field['ddn'] as String?)?.split(',') ?? [];
+            final values = (field['ddnval'] as String?)?.split(',') ?? [];
+            final valueStr = value.toString();
+            final index = values.indexOf(valueStr);
+            if (index != -1) {
+              controller.selectedRadio[name] = options[index];
+            }
+          }
+          break;
+
+        case 9: // Multi-select
+          if (value != null) {
+            final options = (field['ddn'] as String?)?.split(',') ?? [];
+            final values = (field['ddnval'] as String?)?.split(',') ?? [];
+            final selectedOptions = <String>{};
+
+            // Handle both string and list inputs
+            if (value is String) {
+              final selectedValues = value.split(',');
+              for (var val in selectedValues) {
+                final index = values.indexOf(val);
+                if (index != -1) {
+                  selectedOptions.add(options[index]);
+                }
+              }
+            } else if (value is int || value is double) {
+              final valStr = value.toString();
+              final index = values.indexOf(valStr);
+              if (index != -1) {
+                selectedOptions.add(options[index]);
+              }
+            }
+
+            controller.selectedMulti[name] = selectedOptions;
+          }
+          break;
+      }
+    }
+  }
+
+  String? getDropdownValue(Map<String, dynamic> field, String selectedText) {
+    if (field['ddn'] == null || field['ddnval'] == null) return selectedText;
+
+    final options = field['ddn'].split(',');
+    final values = field['ddnval'].split(',');
+
+    final index = options.indexOf(selectedText);
+    return index != -1 ? values[index] : selectedText;
+  }
 
   void populateFormValues(List<dynamic> frm) {
     for (var field in frm) {
@@ -38,16 +110,23 @@ class DynamicFormPage extends StatelessWidget {
         case 1: // Text field
           field['val'] = controller.textControllers[name]?.text ?? '';
           break;
-        case 8: // Radio
-          field['val'] = controller.selectedRadio[name] ?? '';
+        case 8: // Radio (single select dropdown)
+          if (controller.selectedRadio[name] != null) {
+            field['val'] =
+                getDropdownValue(field, controller.selectedRadio[name]!);
+          }
           break;
         case 9: // Multi-select
           final selectedOptions = controller.selectedMulti[name];
-          field['val'] =
-              selectedOptions != null ? selectedOptions.join(',') : '';
+          if (selectedOptions != null && selectedOptions.isNotEmpty) {
+            // For multi-select, we'll join the converted values with commas
+            field['val'] = selectedOptions
+                .map((opt) => getDropdownValue(field, opt))
+                .join(',');
+          }
           break;
         case 13: // Image
-          // We'll handle the upload separately and set this below
+          // Handle image separately
           break;
         default:
           break;
@@ -80,7 +159,7 @@ class DynamicFormPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          name,
+          isEditMode ? 'Edit $name' : 'Create $name',
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
@@ -92,6 +171,7 @@ class DynamicFormPage extends StatelessWidget {
           ),
           onPressed: () {
             Navigator.of(context).pop();
+            eformDataControlle.loadFormsFromDb();
           },
         ),
         actions: [
@@ -104,15 +184,7 @@ class DynamicFormPage extends StatelessWidget {
             onPressed: () async {
               print('Dam $frm $ftid $oid');
 
-              //  geo: "28.6139,77.2090", // Replace with actual location
-
-              //       oid: widget.oid,
-              //       formId: "0", // Or actual ID if editing
-              //       ftid: widget.gType.id.toString(),
-              //       formFields: widget.gType.details['frm'],
-
               final frmkey = DateTime.now().millisecondsSinceEpoch.toString();
-
               populateFormValues(frm);
 
               // if (hasImageField && controller.pickedImage.value != null) {
@@ -122,7 +194,7 @@ class DynamicFormPage extends StatelessWidget {
               // }
 
               controller.submitForm(
-                  id, '28.6139,77.2090', oid, '0', ftid, name, frm, frmkey);
+                  id, '28.6139,77.2090', oid, editOrsaveId, ftid, name, frm, frmkey );
               print("eform save is clicked ::");
               eformDataControlle.loadFormsFromDb();
               Navigator.of(context).pop();

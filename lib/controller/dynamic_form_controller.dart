@@ -63,7 +63,17 @@ class DynamicFormController extends GetxController {
 
   Future<void> submitForm(String id, String geo, String oid, String formId,
       String ftid, String name, List<dynamic> frm, String frmkey) async {
-    print("All the data is :$id $geo $oid $formId $ftid $frm $frmkey");
+    // 1. Create proper form key
+    final formattedFrmkey =
+        'BW Form715297${DateTime.now().millisecondsSinceEpoch}';
+
+    // 2. Restructure the form data
+    final formattedData = {'frm': frm};
+
+    final formFieldsForDb = frm;
+
+    print(
+        "All the data is :$id $geo $oid $formId $ftid $formattedData $formattedFrmkey");
 
     if (networkController.isOnline.value == false) {
       print("Network is offline : ");
@@ -74,16 +84,18 @@ class DynamicFormController extends GetxController {
           formId: formId,
           ftid: ftid,
           name: name,
-          frm: frm,
-          frmkey: frmkey,
-          action: 'save');
+          frm: formFieldsForDb, // Use formatted data
+          frmkey: formattedFrmkey, // Use formatted key
+          action: 'save'
+          
+          );
 
       final data = EFormDataModel(
         id: id,
         oid: oid,
         ftid: ftid,
-        frmKey: frmkey,
-        formFields: frm,
+        frmKey: formattedFrmkey,
+        formFields: formFieldsForDb, // Use formatted data
         updatedTimestamp: '${DateTime.now().millisecondsSinceEpoch}',
         updatedBy: 'updatedBy',
       );
@@ -96,11 +108,11 @@ class DynamicFormController extends GetxController {
     final apiUrl =
         'https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid'
         '&action=saveorderform&oid=$oid&id=$formId&ftid=$ftid'
-        '&fdata=${Uri.encodeComponent(jsonEncode(frm))}&frmkey=$frmkey'
+        '&fdata=${Uri.encodeComponent(jsonEncode(formattedData))}&frmkey=$formattedFrmkey'
         '&index1=NULL&index2=NULL&index3=NULL&index4=NULL&index5=NULL&index6=NULL'
         '&stmp=${DateTime.now().millisecondsSinceEpoch}';
 
-    print("API form : $frm $frmkey");
+    print("API form : $formattedData $formattedFrmkey");
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
@@ -116,9 +128,4 @@ class DynamicFormController extends GetxController {
       print("Error while submitting form: $e");
     }
   }
-
-
-
-
-  
 }

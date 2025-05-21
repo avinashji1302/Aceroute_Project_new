@@ -59,12 +59,12 @@ dependencies:
   xml: ^6.1.0
   http: ^1.2.2
   pubnub: ^4.1.0
-  package_info_plus: ^8.1.0
+  package_info_plus: ^8.3.0
   pub_semver: ^2.1.4
   # sqflite: ^2.4.0
   # sqflite_common_ffi: ^2.3.4
   sqflite: ^2.0.0+4
-  connectivity_plus: ^6.1.1
+  connectivity_plus: ^6.1.4
   numberpicker: ^2.1.2
   flutter_background_service: ^5.1.0
   flutter_background_service_android: ^6.3.0

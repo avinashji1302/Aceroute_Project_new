@@ -1,10 +1,11 @@
-import 'package:ace_routes/view/voltage_form.dart';
+import 'package:ace_routes/database/Tables/eform_data_table.dart';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controller/eform_controller.dart';
 import '../model/GTypeModel.dart';
-import 'add_bw_from.dart';
+
 import 'other_form.dart';
 
 class EformSelect extends StatelessWidget {
@@ -50,10 +51,15 @@ class EformSelect extends StatelessWidget {
                 return Column(
                   children: [
                     ListTile(
-                      onTap: () {
+                      onTap: () async {
                         Navigator.of(context).pop();
+                        final rules = gType.details['rules'] ?? {};
+                        final formCount =
+                            int.tryParse(rules['cnt']?.toString() ?? '1') ?? 1;
+                        final formStatus = rules['sts']?.toString() ?? '';
 
-                        print(" Tapped : ${gType}  ${gType.name}");
+                        print(
+                            " Tapped : ${gType} count :   $formCount  status :  $formStatus");
 
                         // if (gType.id == 'BW Form') {
                         //   Get.to(AddBwForm(gType: gType, oid: oid));
@@ -63,7 +69,35 @@ class EformSelect extends StatelessWidget {
                         //   Get.to(OtherForm(gType: gType, oid: oid));
                         // }
 
-                        Get.to(DynamicFormPage(id: gType.id, frm :gType.details['frm'], name: gType.name, oid: oid, ftid: gType.id.toString()));
+                        // Check if form already exists in database
+                        final existingForms =
+                            await EFormDataTable.getFormsByType(gType.id);
+                        if (formCount == 1 && existingForms.isNotEmpty) {
+                          print(
+                              "ALready exsits $formCount ${existingForms.first.id} ${existingForms.first.formFields}");
+                          // Only allow editing existing form
+                          Get.to(DynamicFormPage(
+                            id: existingForms.first.id, // Use existing form ID
+                            frm: existingForms.first.formFields,
+                            name: gType.name,
+                            oid: oid,
+                            ftid: gType.id.toString(),
+                            isEditMode: true,
+                            editOrsaveId: existingForms.first
+                                .id, // Add this flag to your DynamicFormPage
+                          ));
+                        } else {
+                          // Allow new form creation
+                          Get.to(DynamicFormPage(
+                            id: gType.id,
+                            frm: gType.details['frm'],
+                            name: gType.name,
+                            oid: oid,
+                            ftid: gType.id.toString(),
+                            isEditMode: false,
+                            editOrsaveId: '0',
+                          ));
+                        }
                       },
                       title: Text("${gType.name}  ${gType.id}"),
                     ),

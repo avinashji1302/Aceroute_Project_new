@@ -1,5 +1,9 @@
-
 import 'dart:io';
+import 'package:ace_routes/controller/connectivity/network_controller.dart';
+import 'package:ace_routes/database/Tables/file_meta_table.dart';
+import 'package:ace_routes/database/databse_helper.dart';
+import 'package:ace_routes/database/offlineTables/upload_sync_table.dart';
+import 'package:ace_routes/model/file_meta_model.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
@@ -17,7 +21,9 @@ class PicUploadController extends GetxController {
   RxList<String> imageNames = <String>[].obs;
   RxList<String> descriptions = <String>[].obs;
 
-  int? eventId;        // Store eventId for the current event
+  final NetworkController networkController = Get.find<NetworkController>();
+
+  int? eventId; // Store eventId for the current event
 
   // Set eventId passed from the screen
   void setEventId(int id) {
@@ -31,11 +37,10 @@ class PicUploadController extends GetxController {
     if (pickedFile != null) {
       File file = File(pickedFile.path);
       if (images.length < 6) {
-       // images.add(file);
+        // images.add(file);
         print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
         print(eventId);
         Get.to(() => ImagePreviewScreen(imageFile: file, eventId: eventId!));
-
       } else {
         Get.snackbar('Limit Reached', 'You can only upload up to 6 images.',
             snackPosition: SnackPosition.BOTTOM);
@@ -43,11 +48,43 @@ class PicUploadController extends GetxController {
     }
   }
 
-
-
-
   // ✅ Upload Image to API
-  Future<void> uploadImage(File file, String eventId, String fileType, String description) async {
+  Future<void> uploadImage(
+      File file, String eventId, String fileType, String description) async {
+    if (networkController.isOnline.value == false) {
+      final db = await DatabaseHelper().database;
+      print("Offline uploading");
+
+      await UploadSyncTable.insert(
+          filePath: file.path,
+          eventId: eventId,
+          fileType: fileType,
+          description: description,
+          timestamp: DateTime.now().millisecondsSinceEpoch.toString());
+      Get.snackbar("Saved Offline", "Will upload when back online");
+
+      //adding in local database
+
+      final filemetaData = FileMetaModel(
+        id: eventId,
+        fname: '',
+        oid: eventId,
+        tid: "1",
+        mime: fileType,
+        dtl: description,
+        geo: '',
+        frmkey: '',
+        frmfldid: '',
+        upd: '',
+        by: '',
+      );
+
+      // ✅ Save to database
+      await FileMetaTable.insertMultipleFileMeta([filemetaData], db);
+
+      return;
+    }
+
     try {
       var url = Uri.parse("https://$baseUrl/fileupload");
       var request = http.MultipartRequest("POST", url);
@@ -60,7 +97,8 @@ class PicUploadController extends GetxController {
       request.fields['stmp'] = DateTime.now().millisecondsSinceEpoch.toString();
       request.fields['tid'] = fileType;
       request.fields['mime'] = fileType == "1" ? "mp3" : "jpg";
-      request.fields['dtl'] = description; // 🔹 Send the description with the request
+      request.fields['dtl'] =
+          description; // 🔹 Send the description with the request
       request.fields['frmkey'] = "";
       request.fields['frmfldid'] = "";
 
@@ -85,7 +123,7 @@ class PicUploadController extends GetxController {
     } catch (e) {
       print("❌ Exception: $e");
       Get.snackbar("Success", "Image uploaded successfully!");
-     // Get.snackbar("Upload Error", e.toString());
+      // Get.snackbar("Upload Error", e.toString());
     }
   }
 
@@ -101,7 +139,6 @@ class PicUploadController extends GetxController {
       return false; // ❌ Failure
     }
   }
-
 
   // ✅ Delete Selected Image
   void deleteImage(int index) {
@@ -134,4 +171,3 @@ class PicUploadController extends GetxController {
     update();
   }
 }
-

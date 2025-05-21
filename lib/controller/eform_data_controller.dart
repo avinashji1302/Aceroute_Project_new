@@ -28,16 +28,11 @@ class EFormDataController extends GetxController {
     final url =
         'https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=getorderform&oid=$oid';
 
-    print("Fetching EForm from: $url");
-
     try {
       final response = await http.get(Uri.parse(url));
-      print("Response Code: ${response.statusCode}");
-
       if (response.statusCode == 200) {
         final document = XmlDocument.parse(response.body);
         final ofrms = document.findAllElements('ofrm');
-        print("Found ${ofrms.length} <ofrm> elements");
 
         for (var ofrm in ofrms) {
           final id = ofrm.getElement('id')?.text ?? '';
@@ -48,40 +43,35 @@ class EFormDataController extends GetxController {
           final updatedTimestamp = ofrm.getElement('upd')?.text ?? '';
           final fdata = ofrm.getElement('fdata')?.text ?? '';
 
-          print("Raw fdata: $document");
-
           dynamic decodedData;
           try {
             decodedData = json.decode(fdata);
-            print("Decoded JSON: $decodedData");
-          } catch (e) {
-            print('JSON decode error: $e');
-            continue;
-          }
 
-          final model = EFormDataModel(
-            id: id,
-            oid: oid,
-            ftid: ftid,
-            frmKey: frmKey,
-            formFields: decodedData,
-            updatedTimestamp: updatedTimestamp,
-            updatedBy: updatedBy,
-          );
+            // Normalize the data structure
+            List<dynamic> formFieldsList;
+            if (decodedData is Map && decodedData.containsKey('frm')) {
+              formFieldsList = decodedData['frm'];
+            } else if (decodedData is List) {
+              formFieldsList = decodedData;
+            } else {
+              formFieldsList = [];
+            }
 
-          print("Constructed Model: $model");
+            final model = EFormDataModel(
+              id: id,
+              oid: oid,
+              ftid: ftid,
+              frmKey: frmKey,
+              formFields: formFieldsList,
+              updatedTimestamp: updatedTimestamp,
+              updatedBy: updatedBy,
+            );
 
-          try {
             await EFormDataTable.insertEForm(model);
-            print("Model saved to DB successfully");
           } catch (e) {
-            print("DB insert error: $e");
+            print('Error processing form data: $e');
           }
-
-          showSavedForms();
         }
-      } else {
-        print('Failed to fetch data: ${response.statusCode}');
       }
     } catch (e) {
       print("Fetch error: $e");
@@ -99,20 +89,20 @@ class EFormDataController extends GetxController {
     }
   }
 
-  void showSavedForms() async {
-    print("Inside showSavedForms()...");
-    try {
-      final forms = await EFormDataTable.getAllEFormsFromDb();
-      print("Total forms retrieved from DB: ${forms.length}");
+  // void showSavedForms() async {
+  //   print("Inside showSavedForms()...");
+  //   try {
+  //     final forms = await EFormDataTable.getAllEFormsFromDb();
+  //     print("Total forms retrieved from DB: ${forms.length}");
 
-      for (var form in forms) {
-        print('Form ID: ${form.id}');
-        print('Form Fields: ${form.formFields}');
-      }
-    } catch (e) {
-      print("Error reading from DB: $e");
-    }
-  }
+  //     for (var form in forms) {
+  //       print('Form ID: ${form.id}');
+  //       print('Form Fields: ${form.formFields}');
+  //     }
+  //   } catch (e) {
+  //     print("Error reading from DB: $e");
+  //   }
+  // }
 
   //----------------Deletig the Eform------------------
 
@@ -135,8 +125,4 @@ class EFormDataController extends GetxController {
   }
 
   //------------Editing Here:-----------------------------------------------
-
-
-
-
 }

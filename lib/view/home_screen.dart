@@ -583,11 +583,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                           icon: Icons.person_2_sharp,
                                           badgeCount: '0',
                                           onPressed: () {
-                                            Get.to(EFormScreen(
+                                            Get.to(
+                                              EFormScreen(
                                                 oid: eventController
                                                     .events[index].id,
                                                 tid: eventController
-                                                    .events[index].tid));
+                                                    .events[index].tid,
+                                              ),
+                                            );
                                           },
                                           badgePositionLeft: 0,
                                           badgePositionTop: 0,

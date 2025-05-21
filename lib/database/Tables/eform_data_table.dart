@@ -35,13 +35,21 @@ class EFormDataTable {
 
   static Future<List<EFormDataModel>> getAllEFormsFromDb() async {
     final db = await DatabaseHelper().database;
-    print("Querying all forms from $tableName...");
     final result = await db.query(tableName);
 
-    print("Total rows fetched: ${result.length}");
     return result.map((json) {
       final map = Map<String, dynamic>.from(json);
-      map['formFields'] = jsonDecode(map['formFields']);
+
+      // Handle the stored JSON string
+      if (map['formFields'] is String) {
+        try {
+          map['formFields'] = jsonDecode(map['formFields']);
+        } catch (e) {
+          print('Error decoding stored formFields: $e');
+          map['formFields'] = [];
+        }
+      }
+
       return EFormDataModel.fromJson(map);
     }).toList();
   }
@@ -53,5 +61,15 @@ class EFormDataTable {
         await db.delete(tableName, where: 'id = ? ', whereArgs: [id]);
 
     print('response deleted successfully : $response');
+  }
+
+  static Future<List<EFormDataModel>> getFormsByType(String ftid) async {
+    final db = await DatabaseHelper().database;
+    final result = await db.query(
+      tableName,
+      where: 'ftid = ?',
+      whereArgs: [ftid],
+    );
+    return result.map((json) => EFormDataModel.fromJson(json)).toList();
   }
 }
