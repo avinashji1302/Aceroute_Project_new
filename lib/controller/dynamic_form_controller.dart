@@ -86,7 +86,7 @@ class DynamicFormController extends GetxController {
           name: name,
           frm: formFieldsForDb, // Use formatted data
           frmkey: formattedFrmkey, // Use formatted key
-          action: 'save'
+          action:formId == '0' ? 'save':'edit'
           
           );
 

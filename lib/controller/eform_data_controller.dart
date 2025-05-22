@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:ace_routes/controller/background/location_service.dart';
 import 'package:ace_routes/database/Tables/eform_data_table.dart';
+import 'package:ace_routes/database/offlineTables/delete_sync_eform.dart';
 import 'package:ace_routes/model/eform_data_model.dart';
 import 'package:get/get.dart';
 import 'package:xml/xml.dart';
@@ -106,21 +108,59 @@ class EFormDataController extends GetxController {
 
   //----------------Deletig the Eform------------------
 
-  Future<void> deleteForm(String id) async {
-    final url =
-        'https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=deleteorderform&id=$id';
+  // Future<void> deleteForm(String id) async {
+  //   final url =
+  //       'https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=deleteorderform&id=$id';
 
-    EFormDataTable.deleteForm(id);
+  //   EFormDataTable.deleteForm(id);
+
+  //   try {
+  //     final response = await http.get(Uri.parse(url));
+
+  //     if (response.statusCode == 200) {
+  //       print(jsonDecode(response.body));
+  //       print("Deleted the form successfully");
+  //     }
+  //   } catch (e) {
+  //     print("somethig went wrong while deletng $e");
+  //   }
+  // }
+
+  Future<void> deleteForm(String id) async {
+    // Always delete locally first
+    await EFormDataTable.deleteForm(id);
+
+    print("id is $id");
+
+    if (networkController.isOnline.value) {
+      // If online, try to delete immediately
+      await performDeleteOnServer(id);
+    } else {
+      // If offline, queue the delete action
+      await DeleteSyncEformTable.queueDelete(
+        formId: id,
+        geo: '28.6139,77.2090', // Use current location or default
+      );
+    }
+  }
+
+  Future<bool> performDeleteOnServer(String formId) async {
+    final url =
+        'https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=deleteorderform&id=$formId';
 
     try {
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
-        print(jsonDecode(response.body));
-        print("Deleted the form successfully");
+        print("✅ Deleted form $formId from server");
+        return true;
+      } else {
+        print("❌ Server error deleting form $formId: ${response.statusCode}");
+        return false;
       }
     } catch (e) {
-      print("somethig went wrong while deletng $e");
+      print("❌ Network error deleting form $formId: $e");
+      return false;
     }
   }
 

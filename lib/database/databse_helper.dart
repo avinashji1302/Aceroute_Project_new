@@ -4,6 +4,7 @@ import 'package:ace_routes/database/Tables/file_meta_table.dart';
 import 'package:ace_routes/database/Tables/prority_table.dart';
 import 'package:ace_routes/database/offlineTables/add_form_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/clockout_sync_table.dart';
+import 'package:ace_routes/database/offlineTables/delete_sync_eform.dart';
 import 'package:ace_routes/database/offlineTables/order_part_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/status_sync_table.dart';
 import 'package:ace_routes/database/offlineTables/upload_sync_table.dart';
@@ -75,13 +76,18 @@ class DatabaseHelper {
       OrderPartSyncTable.onCreate(db),
       ClockOutSyncTable.onCreate(db),
       AddFormSyncTable.onCreate(db),
-      UploadSyncTable.onCreate(db)
+      UploadSyncTable.onCreate(db),
+      DeleteSyncEformTable.onCreate(db)
     ]);
     print("All tables created successfully.");
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     // print("Upgrading database...");
+
+    if (oldVersion < 17) {
+      await DeleteSyncEformTable.onCreate(db);
+    }
 
     if (oldVersion < 16) {
       await UploadSyncTable.onCreate(db);

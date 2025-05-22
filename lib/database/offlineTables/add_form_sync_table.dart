@@ -56,7 +56,25 @@ class AddFormSyncTable {
 
   static Future<List<Map<String, dynamic>>> getUnsynced() async {
     final db = await DatabaseHelper().database;
-    return await db.query(tableName, where: 'synced = ?', whereArgs: [0]);
+    final results =
+        await db.query(tableName, where: 'synced = ?', whereArgs: [0]);
+
+    return results.map((row) {
+      // Decode the JSON string back to List<dynamic>
+      final frmData = jsonDecode(row['frm'] as String) as List<dynamic>;
+      return {
+        'id': row['id'] as int,
+        'geo': row['geo'] as String,
+        'oid': row['oid'] as String,
+        'form_id': row['form_id'] as String,
+        'ftid': row['ftid'] as String,
+        'name': row['name'] as String,
+        'frm': frmData, // Now properly decoded
+        'frmkey': row['frmkey'] as String,
+        'action': row['action'] as String,
+        'synced': row['synced'] as int,
+      };
+    }).toList();
   }
 
   static Future<void> markSynced(int id) async {
@@ -70,7 +88,4 @@ class AddFormSyncTable {
     await db.delete(tableName, where: 'synced = ?', whereArgs: [1]);
     print("🧹 Cleared all synced form records.");
   }
-
-
-  
 }
