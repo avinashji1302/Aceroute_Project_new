@@ -274,7 +274,7 @@ class NetworkController extends GetxController {
 
         final mimeType = item['file_type'] == "1" ? "mp3" : "jpg";
 
-        print("$item[mimeType]  $item['description']");
+        print(" data s : $item[mimeType]  $item['description'] frmkey :  $item['frmkey'] frm id :  $item['frmfldid']");
 
         request.fields.addAll({
           'token': "$token",
@@ -286,8 +286,8 @@ class NetworkController extends GetxController {
           'tid': item['file_type'],
           'mime': mimeType,
           'dtl': item['description'] ?? '',
-          'frmkey': "",
-          'frmfldid': "",
+          'frmkey': item['frmkey'],
+          'frmfldid': item['frmfldid'],
         });
 
         request.files.add(await http.MultipartFile.fromPath(

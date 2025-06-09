@@ -59,6 +59,8 @@ class PicUploadController extends GetxController {
           filePath: file.path,
           eventId: eventId,
           fileType: fileType,
+          frmkey: '',
+          frmfldid: '',
           description: description,
           timestamp: DateTime.now().millisecondsSinceEpoch.toString());
       Get.snackbar("Saved Offline", "Will upload when back online");

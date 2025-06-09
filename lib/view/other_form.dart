@@ -1,8 +1,13 @@
 import 'dart:io';
 
+import 'package:ace_routes/controller/background/location_service.dart';
 import 'package:ace_routes/controller/dynamic_form_controller.dart';
 import 'package:ace_routes/controller/eform_data_controller.dart';
 import 'package:ace_routes/core/colors/Constants.dart';
+import 'package:ace_routes/database/Tables/file_meta_table.dart';
+import 'package:ace_routes/database/databse_helper.dart';
+import 'package:ace_routes/database/offlineTables/upload_sync_table.dart';
+import 'package:ace_routes/model/file_meta_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,7 +21,7 @@ class DynamicFormPage extends StatelessWidget {
   final String name;
   final String ftid;
   final bool isEditMode;
-  final String editOrsaveId;  // 0 for save existing id  for edit
+  final String editOrsaveId; // 0 for save existing id  for edit
   final DynamicFormController controller;
   final eformDataControlle = Get.find<EFormDataController>();
 
@@ -36,7 +41,16 @@ class DynamicFormPage extends StatelessWidget {
   }
 
   void _initializeFormData(List<dynamic> fields) {
-    if (!isEditMode) return;
+    print(" is edited mode : $isEditMode");
+    if (!isEditMode) {
+      print(" clearing...");
+      controller.textControllers.clear(); // or loop over and clear each
+      controller.selectedMulti.clear();
+      controller.selectedRadio.clear();
+      controller.pickedImage.value = null;
+      return;
+    }
+    ;
 
     for (var field in fields) {
       final tid = field['tid'];
@@ -101,6 +115,8 @@ class DynamicFormPage extends StatelessWidget {
     return index != -1 ? values[index] : selectedText;
   }
 
+  String imageFormFieldId = '';
+
   void populateFormValues(List<dynamic> frm) {
     for (var field in frm) {
       final tid = field['tid'];
@@ -127,6 +143,8 @@ class DynamicFormPage extends StatelessWidget {
           break;
         case 13: // Image
           // Handle image separately
+          imageFormFieldId = field['id'].toString();
+          print("id image is $imageFormFieldId");
           break;
         default:
           break;
@@ -134,21 +152,85 @@ class DynamicFormPage extends StatelessWidget {
     }
   }
 
-  Future<void> uploadImage(String frmkey, XFile imageFile) async {
-    final url = Uri.parse(
-        "https://$baseUrl/mobi?token=$token&nspace=$nsp&rid=$rid&action=fileupload");
+  Future<void> uploadImageForm(
+      String frmkey, XFile imageFile, String oid) async {
+    try {
+      print(
+          "🖼️ Uploading form image: fieldId = $imageFormFieldId, frmkey = $frmkey");
 
-    var request = http.MultipartRequest('POST', url);
-    request.fields['frmkey'] = frmkey;
-    request.files
-        .add(await http.MultipartFile.fromPath('file', imageFile.path));
+      // ------------------------- Offline Mode -------------------------
+      if (!networkController.isOnline.value) {
+        final db = await DatabaseHelper().database;
+        print("⚠️ Offline uploading");
 
-    final response = await request.send();
+        await UploadSyncTable.insert(
+          filePath: imageFile.path,
+          eventId: oid,
+          fileType: '1', // assuming '2' = image/jpg
+          frmkey: frmkey,
+          frmfldid: imageFormFieldId,
+          description: '',
+          timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
+        );
 
-    if (response.statusCode == 200) {
-      print('Image upload successful');
-    } else {
-      print('Image upload failed');
+        final filemetaData = FileMetaModel(
+          id: oid,
+          fname: '',
+          oid: oid,
+          tid: "1",
+          mime: 'jpg',
+          dtl: '',
+          geo: '',
+          frmkey: frmkey,
+          frmfldid: imageFormFieldId,
+          upd: '',
+          by: '',
+        );
+
+        await FileMetaTable.insertMultipleFileMeta([filemetaData], db);
+
+        Get.snackbar("Saved Offline", "Will upload when back online");
+        return;
+      }
+
+      // ------------------------- Online Upload -------------------------
+      var url = Uri.parse("https://$baseUrl/fileupload");
+      var request = http.MultipartRequest("POST", url);
+
+      request.fields.addAll({
+        'token': token,
+        'nspace': nsp,
+        'geo': '28.6139,77.2090', // hardcoded geo location
+        'rid': rid,
+        'oid': oid,
+        'stmp': DateTime.now().millisecondsSinceEpoch.toString(),
+        'tid': '1',
+        'mime': 'jpg',
+        'dtl': '',
+        'frmkey': frmkey,
+        'frmfldid': imageFormFieldId,
+      });
+
+      request.files.add(await http.MultipartFile.fromPath(
+        'binaryFile',
+        imageFile.path,
+      ));
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        print('✅ Image upload successful');
+        print('📦 Response: $responseBody');
+        Get.snackbar("Success", "Image uploaded successfully!");
+      } else {
+        print('❌ Upload failed with status ${response.statusCode}');
+        print('📦 Error Response: $responseBody');
+        Get.snackbar("Upload Failed", response.reasonPhrase ?? "Error");
+      }
+    } catch (e) {
+      print("❌ Exception during image upload: $e");
+      Get.snackbar("Upload Error", e.toString());
     }
   }
 
@@ -187,17 +269,22 @@ class DynamicFormPage extends StatelessWidget {
               final frmkey = DateTime.now().millisecondsSinceEpoch.toString();
               populateFormValues(frm);
 
-              // if (hasImageField && controller.pickedImage.value != null) {
-              //   await uploadImage(frmkey, controller.pickedImage.value!);
-              //   frm.firstWhere((e) => e['tid'] == 13)['val'] =
-              //       controller.pickedImage.value!.name;
-              // }
-
-              controller.submitForm(
-                  id, '28.6139,77.2090', oid, editOrsaveId, ftid, name, frm, frmkey );
+              controller.submitForm(id, '28.6139,77.2090', oid, editOrsaveId,
+                  ftid, name, frm, frmkey);
               print("eform save is clicked ::");
               eformDataControlle.loadFormsFromDb();
+
+              controller.textControllers.clear();
               Navigator.of(context).pop();
+
+              //form images
+
+              if (hasImageField && controller.pickedImage.value != null) {
+                await uploadImageForm(
+                    frmkey, controller.pickedImage.value!, oid);
+                frm.firstWhere((e) => e['tid'] == 13)['val'] =
+                    controller.pickedImage.value!.name;
+              }
             },
           ),
         ],

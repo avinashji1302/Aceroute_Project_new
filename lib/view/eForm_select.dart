@@ -59,15 +59,7 @@ class EformSelect extends StatelessWidget {
                         final formStatus = rules['sts']?.toString() ?? '';
 
                         print(
-                            " Tapped : ${gType} count :   $formCount  status :  $formStatus");
-
-                        // if (gType.id == 'BW Form') {
-                        //   Get.to(AddBwForm(gType: gType, oid: oid));
-                        // } else if (gType.name == 'Voltage Form') {
-                        //   Get.to(VoltageForm(gType: gType));
-                        // } else {
-                        //   Get.to(OtherForm(gType: gType, oid: oid));
-                        // }
+                            " Tapped : ${gType.capacity} count :   $formCount  status :  $formStatus");
 
                         // Check if form already exists in database
                         final existingForms =
@@ -88,6 +80,7 @@ class EformSelect extends StatelessWidget {
                           ));
                         } else {
                           // Allow new form creation
+                          print("new one:");
                           Get.to(DynamicFormPage(
                             id: gType.id,
                             frm: gType.details['frm'],

@@ -104,6 +104,27 @@ class EventTable {
     return null;
   }
 
+  // fetch tid for status change
+
+ static Future<String?> fetchTidForStatus(String oid) async {
+    final db = await DatabaseHelper().database;
+
+    // Perform the query
+    final List<Map<String, dynamic>> result = await db.query(
+      tableName,
+      where: 'id = ?',
+      whereArgs: [oid],
+    );
+
+    // Check if result is not empty and return the 'tid' value
+    if (result.isNotEmpty) {
+      print(result.first['tid'].toString());
+      return result.first['tid'].toString(); // Adjust key as needed
+    } else {
+      return null; // Or throw an error / return empty string
+    }
+  }
+
   // Update order by ID
   static Future<int> updateOrder(String orderId, String newWkf) async {
     final db = await DatabaseHelper().database;
@@ -174,8 +195,6 @@ class EventTable {
 
     print("$response successfully deleted");
   }
-
-
 
   // Clear all events
   static Future<void> clearEvents() async {

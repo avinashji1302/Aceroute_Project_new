@@ -22,7 +22,8 @@ class AudioRecord extends StatefulWidget {
 class _AudioRecordState extends State<AudioRecord> {
   final AudioController _controller = AudioController();
   final FileMetaController fileMetaController = Get.put(FileMetaController());
-  final AudioPlayerController audioPlayerController = Get.put(AudioPlayerController());
+  final AudioPlayerController audioPlayerController =
+      Get.put(AudioPlayerController());
   final EventController eventController = Get.put(EventController());
 
   bool isUploading = false;
@@ -31,7 +32,8 @@ class _AudioRecordState extends State<AudioRecord> {
   void initState() {
     super.initState();
     _initController();
-    fileMetaController.fetchFileAudioDataFromDatabase(widget.eventId.toString());
+    fileMetaController
+        .fetchFileAudioDataFromDatabase(widget.eventId.toString());
   }
 
   Future<void> _initController() async {
@@ -61,7 +63,8 @@ class _AudioRecordState extends State<AudioRecord> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Microphone Permission Denied'),
-        content: const Text('This app needs microphone access to record audio. Please enable microphone permissions in your device settings.'),
+        content: const Text(
+            'This app needs microphone access to record audio. Please enable microphone permissions in your device settings.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -97,7 +100,8 @@ class _AudioRecordState extends State<AudioRecord> {
 
     setState(() => isUploading = false);
 
-    fileMetaController.fetchFileAudioDataFromDatabase(widget.eventId.toString());
+    fileMetaController
+        .fetchFileAudioDataFromDatabase(widget.eventId.toString());
     _showSuccessDialog(lastRecordingPath);
   }
 
@@ -126,7 +130,8 @@ class _AudioRecordState extends State<AudioRecord> {
   void _showDeleteConfirmationDialog(String audioId, String eventId) {
     Get.dialog(
       AlertDialog(
-        title: const Text("Delete Audio", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text("Delete Audio",
+            style: TextStyle(fontWeight: FontWeight.bold)),
         content: const Text("Are you sure you want to delete this audio?"),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         actionsAlignment: MainAxisAlignment.end,
@@ -189,7 +194,6 @@ class _AudioRecordState extends State<AudioRecord> {
     );
   }
 
-
   Widget _buildLocalRecordings() {
     return ListView.separated(
       itemCount: _controller.recordings.length,
@@ -201,7 +205,8 @@ class _AudioRecordState extends State<AudioRecord> {
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16),
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: ListTile(
             title: Text('Recording ${index + 1}'),
             leading: IconButton(
@@ -211,7 +216,8 @@ class _AudioRecordState extends State<AudioRecord> {
                 size: 36,
               ),
               onPressed: () async {
-                await _controller.togglePlayback(recordingPath, () => setState(() {}));
+                await _controller.togglePlayback(
+                    recordingPath, () => setState(() {}));
               },
             ),
             trailing: IconButton(
@@ -237,22 +243,23 @@ class _AudioRecordState extends State<AudioRecord> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-
-            _controller.clearAudio();
-            // Get.offAll(() => HomeScreen());
-             Get.to(()=>HomeScreen());
+            Navigator.of(context).pop();
+          //  _controller.clearAudio();
+            // // Get.offAll(() => HomeScreen());
+            //  Get.to(()=>HomeScreen());
           },
         ),
         actions: [
-          IconButton(
-            onPressed: isUploading ? null : _uploadAudioFiles,
-            icon: isUploading
-                ? Padding(
-              padding: EdgeInsets.all(10),
-              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-            )
-                : Icon(Icons.cloud_upload, color: Colors.white),
-          ),
+          // IconButton(
+          //   onPressed: isUploading ? null : _uploadAudioFiles,
+          //   icon: isUploading
+          //       ? Padding(
+          //           padding: EdgeInsets.all(10),
+          //           child: CircularProgressIndicator(
+          //               color: Colors.white, strokeWidth: 2),
+          //         )
+          //       : Icon(Icons.cloud_upload, color: Colors.white),
+          // ),
         ],
       ),
       body: SafeArea(
@@ -263,32 +270,37 @@ class _AudioRecordState extends State<AudioRecord> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text("📤 Uploaded Audios", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: Text("📤 Uploaded Audios",
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ),
             Expanded(child: _buildUploadedAudioList(widget.eventId.toString())),
-
             Divider(thickness: 1),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text("🎙️ Record New Audio", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: Text("🎙️ Record New Audio",
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ),
-
             if (_controller.isRecording)
-              SiriWaveform.ios9(options: IOS9SiriWaveformOptions(height: 100, width: 300)),
-
-            Icon(Icons.mic, size: 70, color: _controller.isRecording ? Colors.green : Colors.black),
-
+              SiriWaveform.ios9(
+                  options: IOS9SiriWaveformOptions(height: 100, width: 300)),
+            Icon(Icons.mic,
+                size: 70,
+                color: _controller.isRecording ? Colors.green : Colors.black),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton.icon(
                 onPressed: () async {
                   final result = await Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => AudioRecordingScreen(eventId: widget.eventId.toString())),
+                    MaterialPageRoute(
+                        builder: (_) => AudioRecordingScreen(
+                            eventId: widget.eventId.toString())),
                   );
                   if (result != null && result is String) {
                     setState(() {
@@ -301,11 +313,11 @@ class _AudioRecordState extends State<AudioRecord> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[100],
                   padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             ),
-
             Expanded(child: _buildLocalRecordings()),
           ],
         ),

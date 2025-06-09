@@ -1,6 +1,12 @@
+import 'dart:convert';
+
 import 'package:ace_routes/core/colors/Constants.dart';
+import 'package:ace_routes/database/Tables/eform_data_table.dart';
 import 'package:ace_routes/database/Tables/event_table.dart';
+import 'package:ace_routes/database/Tables/genTypeTable.dart';
 import 'package:ace_routes/database/offlineTables/status_sync_table.dart';
+import 'package:ace_routes/model/eform_data_model.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -67,6 +73,49 @@ class StatusControllers extends GetxController {
     print("oid: $oid, oldWkf: $oldWkf, newWkf: $newWkf, status: $status");
     currentStatus.value = status;
     updatedWkf.value = newWkf;
+
+    //fetch all the data ------
+
+    final String? tid = await EventTable.fetchTidForStatus(oid);
+
+    // fetching all the form that must be there on the basis of tid
+    final datas = await GTypeTable.fetchGTypesContainingCapacity(tid!);
+
+    for (var data in datas) {
+      //fetch status to check weather we need to update the statsu or not?
+      final detailsMap = Map<String, dynamic>.from(data.details);
+
+      final rules = detailsMap['rules'] as Map<String, dynamic>;
+
+      List<String> statusList = [];
+
+      if (rules['sts'] is String) {
+        statusList = (rules['sts'] as String).split(',');
+      } else if (rules['sts'] is List) {
+        statusList = (rules['sts'] as List).map((e) => e.toString()).toList();
+      }
+
+      print('Count: ${rules['cnt']}');
+      print('Status List: $statusList');
+
+      if (statusList.contains(newWkf)) {
+        print("newKf $newWkf : ");
+
+        List<EFormDataModel> formList =
+            await EFormDataTable.getDataGenTypeId(data.id);
+
+        if (formList.isEmpty) {
+          Get.snackbar(
+              "Alert", "You could not change the status without adding form");
+          return;
+        } else {
+          print("form is there : ");
+        }
+        print("Performing action because status is 4 or 5");
+      } else {
+        print("No action needed");
+      }
+    }
 
     // ✅ Always update local DB first
     await EventTable.updateOrder(oid, newWkf);

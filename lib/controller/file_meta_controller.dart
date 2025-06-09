@@ -73,7 +73,7 @@ class FileMetaController extends GetxController {
     try {
       final data = await FileMetaTable.getAllFileMeta();
       List<FileMetaModel> imagesForEvent = data
-          .where((fileMeta) => fileMeta.tid == "1" && fileMeta.oid == eventId)
+          .where((fileMeta) => fileMeta.tid == "1" && fileMeta.oid == eventId && fileMeta.frmkey=='')
           .toList();
 
       fileMetaData.value = imagesForEvent; // ✅ Update the observable list

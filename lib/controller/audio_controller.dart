@@ -1,4 +1,9 @@
 
+import 'package:ace_routes/controller/background/location_service.dart';
+import 'package:ace_routes/database/Tables/file_meta_table.dart';
+import 'package:ace_routes/database/databse_helper.dart';
+import 'package:ace_routes/database/offlineTables/upload_sync_table.dart';
+import 'package:ace_routes/model/file_meta_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
@@ -176,6 +181,47 @@ class AudioController extends GetxController {
   }*/
 
   Future<void> uploadAudio(String filePath, String eventId, String description) async {
+
+
+   //--------------
+
+    // 🔌 Handle offline upload
+      if (networkController.isOnline.value == false) {
+        final db = await DatabaseHelper().database;
+        print("Offline uploading");
+
+        await UploadSyncTable.insert(
+          filePath: filePath, // 🛠️ Fix: use signatureFile.path
+          eventId: eventId,
+          fileType: "3", // 🛠️ Fix: this was missing
+          frmkey: '',
+          frmfldid: '',
+          description: description,
+          timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
+        );
+        Get.snackbar("Saved Offline", "Will upload when back online");
+
+        final filemetaData = FileMetaModel(
+          id: eventId,
+          fname: '',
+          oid: eventId,
+          tid: "3", // 🛠️ Fix: correct file type ID for signature
+          mime: "mp3", // 🛠️ Fix: actual MIME type
+          dtl: description,
+          geo: geo,
+          frmkey: '',
+          frmfldid: '',
+          upd: '',
+          by: '',
+        );
+
+        await FileMetaTable.insertMultipleFileMeta([filemetaData], db);
+        return;
+      }
+      //---------------------
+
+
+
     try {
       File audioFile = File(filePath);
       if (!await audioFile.exists()) {
@@ -193,7 +239,7 @@ class AudioController extends GetxController {
       request.fields['oid'] = eventId;
       request.fields['stmp'] = DateTime.now().millisecondsSinceEpoch.toString();
       request.fields['tid'] = "3";
-      request.fields['mime'] = "aac";
+      request.fields['mime'] = "mp3";
       request.fields['dtl'] = description;
       request.fields['frmkey'] = "";
       request.fields['frmfldid'] = "";
@@ -218,11 +264,11 @@ class AudioController extends GetxController {
         print("✅ Parsed Response: $jsonResponse");
       } else {
         print("❌ Error: ${response.reasonPhrase}");
-        Get.snackbar("Upload Failed", response.reasonPhrase ?? "Error");
+       // Get.snackbar("Upload Failed", response.reasonPhrase ?? "Error");
       }
     } catch (e) {
       print("❌ Exception: $e");
-      Get.snackbar("Upload Error", "Something went wrong.");
+      //Get.snackbar("Upload Error", "Something went wrong.");
     }
   }
 

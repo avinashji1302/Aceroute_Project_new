@@ -72,4 +72,20 @@ class EFormDataTable {
     );
     return result.map((json) => EFormDataModel.fromJson(json)).toList();
   }
+
+  //fetch on the basis of zentype id
+
+  static Future<List<EFormDataModel>> getDataGenTypeId(String ftid) async {
+    final db = await DatabaseHelper().database;
+
+    // Query the table with a WHERE clause filtering by oid
+    final result = await db.query(
+      tableName,
+      where: 'ftid = ?',
+      whereArgs: [ftid],
+    );
+
+    // Convert the result into a list of EFormDataModel
+    return result.map((e) => EFormDataModel.fromJson(e)).toList();
+  }
 }

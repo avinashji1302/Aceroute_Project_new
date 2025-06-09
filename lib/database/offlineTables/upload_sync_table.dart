@@ -12,6 +12,8 @@ class UploadSyncTable {
         event_id TEXT NOT NULL,
         file_type TEXT NOT NULL,
         description TEXT NOT NULL,
+       frmkey TEXT NOT NULL,
+       frmfldid TEXT NOT NULL,
         timestamp TEXT NOT NULL,
         synced INTEGER DEFAULT 0
       )
@@ -24,6 +26,8 @@ class UploadSyncTable {
       required String eventId,
       required String fileType,
       required String description,
+      required String frmkey,
+      required String frmfldid,
       required String timestamp}) async {
     final db = await DatabaseHelper().database;
 
@@ -34,6 +38,8 @@ class UploadSyncTable {
         'event_id': eventId,
         'file_type': fileType,
         'description': description,
+        'frmkey':frmkey,
+        'frmfldid':frmfldid,
         'timestamp': timestamp,
         'synced': 0,
       },

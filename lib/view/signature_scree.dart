@@ -53,51 +53,51 @@ class _SignatureState extends State<Signature> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-           // Navigator.of(context).pop();
+            Navigator.of(context).pop();
             signatureController.clearImages();
             // Get.offAll(() => HomeScreen());
 
-             Get.to(()=>HomeScreen());
+            //  Get.to(()=>HomeScreen());
           },
         ),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              if (isUploading) return; // Prevent multiple clicks
+        // actions: [
+        //   IconButton(
+        //     onPressed: () async {
+        //       if (isUploading) return; // Prevent multiple clicks
 
-              setState(() {
-                isUploading = true; // Show loading indicator
-              });
+        //       setState(() {
+        //         isUploading = true; // Show loading indicator
+        //       });
 
-              if (signatureController.signatures.isEmpty) {
-                setState(() => isUploading = false);
-                Get.snackbar("Error", "No signatures to upload.");
-                return;
-              }
+        //       if (signatureController.signatures.isEmpty) {
+        //         setState(() => isUploading = false);
+        //         Get.snackbar("Error", "No signatures to upload.");
+        //         return;
+        //       }
 
-              // Loop through each signature and upload it
-              for (var signature in signatureController.signatures) {
-                await signatureController.uploadSignature(
-                    signature,
-                    widget.eventId.toString(),
-                    "Signature Upload" // You can change description dynamically
-                    );
-              }
+        //       // Loop through each signature and upload it
+        //       for (var signature in signatureController.signatures) {
+        //         await signatureController.uploadSignature(
+        //             signature,
+        //             widget.eventId.toString(),
+        //             "Signature Upload" // You can change description dynamically
+        //             );
+        //       }
 
-              setState(() {
-                isUploading = false; // Hide loading indicator
-              });
+        //       setState(() {
+        //         isUploading = false; // Hide loading indicator
+        //       });
 
-              _showSuccessDialog(); // ✅ Show success dialog after upload
-            },
-            icon: isUploading
-                ? Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: CircularProgressIndicator(color: Colors.white),
-                  )
-                : Icon(Icons.upload_file, color: Colors.white),
-          ),
-        ],
+        //       _showSuccessDialog(); // ✅ Show success dialog after upload
+        //     },
+        //     icon: isUploading
+        //         ? Padding(
+        //             padding: EdgeInsets.all(10.0),
+        //             child: CircularProgressIndicator(color: Colors.white),
+        //           )
+        //         : Icon(Icons.upload_file, color: Colors.white),
+        //   ),
+        // ],
       ),
       body: SingleChildScrollView(
         child: Padding(

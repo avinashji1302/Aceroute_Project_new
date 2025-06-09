@@ -99,7 +99,12 @@ class _EFormScreenState extends State<EFormScreen> {
                     );
 
                     await eFormDataController.deleteForm(form.id);
-                    // await eFormDataController.loadFormsFromDb();
+                    await eFormDataController.loadFormsFromDb();
+                    setState(() {});
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Form deleted")),
+                    );
                   } else if (direction == DismissDirection.startToEnd) {
                     print("Editing exting form id the app  ${form.id}");
 

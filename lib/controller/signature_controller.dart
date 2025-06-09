@@ -1,7 +1,11 @@
-
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui';
+import 'package:ace_routes/controller/background/location_service.dart';
+import 'package:ace_routes/database/Tables/file_meta_table.dart';
+import 'package:ace_routes/database/databse_helper.dart';
+import 'package:ace_routes/database/offlineTables/upload_sync_table.dart';
+import 'package:ace_routes/model/file_meta_model.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
@@ -36,7 +40,6 @@ class SignatureController extends GetxController {
         });
       }
     }
-
   }
 
   Future<void> _saveSignatures() async {
@@ -82,49 +85,92 @@ class SignatureController extends GetxController {
   }
 
   /// **Upload Signature to API**
+  /// ✅ Upload Signature to API
   Future<void> uploadSignature(
       ui.Image signature, String eventId, String description) async {
     try {
       File signatureFile =
           await _convertImageToFile(signature); // Convert to File
 
+      // 🔌 Handle offline upload
+      if (networkController.isOnline.value == false) {
+        final db = await DatabaseHelper().database;
+        print("Offline uploading");
+
+        await UploadSyncTable.insert(
+          filePath: signatureFile.path, // 🛠️ Fix: use signatureFile.path
+          eventId: eventId,
+          fileType: "2", // 🛠️ Fix: this was missing
+          frmkey: '',
+          frmfldid: '',
+          description: description,
+          timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
+        );
+        Get.snackbar("Saved Offline", "Will upload when back online");
+
+        final filemetaData = FileMetaModel(
+          id: eventId,
+          fname: '',
+          oid: eventId,
+          tid: "2", // 🛠️ Fix: correct file type ID for signature
+          mime: "png", // 🛠️ Fix: actual MIME type
+          dtl: description,
+          geo: geo,
+          frmkey: '',
+          frmfldid: '',
+          upd: '',
+          by: '',
+        );
+
+        await FileMetaTable.insertMultipleFileMeta([filemetaData], db);
+        return;
+      }
+
+      // 🔗 Online Upload
       var url = Uri.parse("https://$baseUrl/fileupload");
       var request = http.MultipartRequest("POST", url);
 
+      // ✅ Required fields
       request.fields['token'] = token;
       request.fields['nspace'] = nsp;
       request.fields['geo'] = geo;
       request.fields['rid'] = rid;
       request.fields['oid'] = eventId;
       request.fields['stmp'] = DateTime.now().millisecondsSinceEpoch.toString();
-      request.fields['tid'] = "2"; // ✅ Set type for signature
-      request.fields['mime'] = "png"; // ✅ Set correct MIME type
+      request.fields['tid'] = "2"; // ✅ 2 = signature
+      request.fields['mime'] = "png";
       request.fields['dtl'] = description;
       request.fields['frmkey'] = "";
       request.fields['frmfldid'] = "";
 
+      // ✅ File upload with correct field name
       request.files.add(await http.MultipartFile.fromPath(
-        'binaryFile',
+        'binaryFile', // 🛠️ Make sure backend expects 'binaryFile'
         signatureFile.path,
         filename: "signature.png",
       ));
 
       var response = await request.send();
       var responseString = await response.stream.bytesToString();
+
       print("🔹 Response: ${response.statusCode} - $responseString");
 
       if (response.statusCode == 200) {
         var jsonResponse = jsonDecode(responseString);
         Get.snackbar("Success", "Signature uploaded successfully!");
         print("✅ Parsed Response: $jsonResponse");
+
+
+          // await FileMetaTable.insertMultipleFileMeta([filemetaData], db);
+
+
       } else {
         print("❌ Error: ${response.reasonPhrase}");
         Get.snackbar("Upload Failed", response.reasonPhrase ?? "Error");
       }
     } catch (e) {
       print("❌ Exception: $e");
-      Get.snackbar("Success", "Signature uploaded successfully!");
-      // Get.snackbar("Upload Error", "Something went wrong.");
+     // Get.snackbar("Upload Error", "Something went wrong.");
     }
   }
 
@@ -162,9 +208,6 @@ class SignatureController extends GetxController {
       print("❌ Exception while fetching signatures: $e");
     }
   }
-
-
-
 
   Future<ui.Image> _convertBase64ToImage(String base64String) async {
     Uint8List bytes = base64Decode(base64String);

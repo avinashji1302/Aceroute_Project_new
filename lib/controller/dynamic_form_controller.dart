@@ -85,7 +85,7 @@ class DynamicFormController extends GetxController {
           ftid: ftid,
           name: name,
           frm: formFieldsForDb, // Use formatted data
-          frmkey: formattedFrmkey, // Use formatted key
+          frmkey: frmkey, // Use formatted key
           action:formId == '0' ? 'save':'edit'
           
           );
@@ -94,7 +94,7 @@ class DynamicFormController extends GetxController {
         id: id,
         oid: oid,
         ftid: ftid,
-        frmKey: formattedFrmkey,
+        frmKey: frmkey,
         formFields: formFieldsForDb, // Use formatted data
         updatedTimestamp: '${DateTime.now().millisecondsSinceEpoch}',
         updatedBy: 'updatedBy',
@@ -108,7 +108,7 @@ class DynamicFormController extends GetxController {
     final apiUrl =
         'https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid'
         '&action=saveorderform&oid=$oid&id=$formId&ftid=$ftid'
-        '&fdata=${Uri.encodeComponent(jsonEncode(formattedData))}&frmkey=$formattedFrmkey'
+        '&fdata=${Uri.encodeComponent(jsonEncode(formattedData))}&frmkey=$frmkey'
         '&index1=NULL&index2=NULL&index3=NULL&index4=NULL&index5=NULL&index6=NULL'
         '&stmp=${DateTime.now().millisecondsSinceEpoch}';
 
