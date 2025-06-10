@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:ace_routes/Widgets/pop_up.dart';
 import 'package:ace_routes/controller/all_terms_controller.dart';
-import 'package:ace_routes/controller/eform_data_controller.dart';
 import 'package:ace_routes/controller/event_controller.dart';
 import 'package:ace_routes/controller/loginController.dart';
 import 'package:ace_routes/controller/map_controller.dart';
@@ -17,13 +16,14 @@ import 'package:ace_routes/view/status_screen.dart';
 import 'package:ace_routes/view/summary_screen.dart';
 import 'package:ace_routes/view/vehicle_details.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:ace_routes/view/drawer.dart';
 import 'package:ace_routes/controller/homeController.dart';
 import 'package:intl/intl.dart';
-import 'package:location/location.dart';
+import 'package:location/location.dart' as loc;
 import '../Widgets/icon_with_badge.dart';
 import '../controller/clockout/clockout_controller.dart';
 import '../controller/file_meta_controller.dart';
@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String subKey = '';
 
 //-----clock in    //---------location for clockedin
-  Location location = new Location();
+  loc.Location location = new loc.Location();
   @override
   void initState() {
     super.initState();

@@ -289,12 +289,16 @@ class DynamicFormPage extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+     body: LayoutBuilder(
+  builder: (context, constraints) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minWidth: constraints.maxWidth),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (var field in frm) ..._buildField(field),
+            for (var field in frm) ..._buildField(field, constraints.maxWidth),
             if (!hasImageField)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
@@ -305,131 +309,117 @@ class DynamicFormPage extends StatelessWidget {
         ),
       ),
     );
+  },
+),
+
+    );
   }
 
-  List<Widget> _buildField(Map<String, dynamic> field) {
-    final tid = field['tid'];
-    final name = field['nm'];
-    final label = field['lbl'] ?? '';
+  List<Widget> _buildField(Map<String, dynamic> field, double maxWidth) {
+  final tid = field['tid'];
+  final name = field['nm'];
+  final label = field['lbl'] ?? '';
 
-    switch (tid) {
-      case 1: // Text input
-        controller.textControllers.putIfAbsent(
-          name,
-          () => TextEditingController(),
-        );
-        return [
-          TextField(
-            controller: controller.textControllers[name],
-            decoration: InputDecoration(
-              hintText: '$label',
-              border: OutlineInputBorder(),
-            ),
+  switch (tid) {
+    case 1: // Text input
+      controller.textControllers.putIfAbsent(
+        name,
+        () => TextEditingController(),
+      );
+      return [
+        TextField(
+          controller: controller.textControllers[name],
+          decoration: InputDecoration(
+            hintText: '$label',
+            border: const OutlineInputBorder(),
           ),
-          const SizedBox(height: 16),
-        ];
+        ),
+        const SizedBox(height: 16),
+      ];
 
-      case 8: // Radio
-        final options = (field['ddn'] as String?)?.split(',') ?? [];
-        // List<String> values = field['ddnval'].split(',');
-        // Group options in chunks of 2
-        List<List<String>> optionPairs = [];
-        for (int i = 0; i < options.length; i += 2) {
-          optionPairs.add(options.sublist(
-              i, i + 2 > options.length ? options.length : i + 2));
-        }
-
-        return [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Obx(() => Column(
-                children: optionPairs.map((pair) {
-                  return Row(
-                    children: pair.map((opt) {
-                      return Expanded(
-                        child: RadioListTile<String>(
-                          value: opt,
-                          groupValue: controller.selectedRadio[name],
-                          title: Flexible(
-                              child: Text(
-                            opt,
-                            softWrap: true,
-                          )),
-                          onChanged: (val) =>
-                              controller.selectedRadio[name] = val!,
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      );
-                    }).toList(),
-                  );
-                }).toList(),
-              )),
-          const SizedBox(height: 16),
-        ];
-
-      case 9: // Multi-select
-        final options = (field['ddn'] as String?)?.split(',') ?? [];
-        return [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Obx(() => Column(
-                children: options.map((opt) {
-                  final selected =
-                      controller.selectedMulti[name]?.contains(opt) ?? false;
-                  return ListTile(
+    case 8: // Radio buttons
+      final options = (field['ddn'] as String?)?.split(',') ?? [];
+      return [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Obx(() => Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: options.map((opt) {
+                return SizedBox(
+                  width: maxWidth > 400 ? (maxWidth / 2) - 24 : maxWidth - 32,
+                  child: RadioListTile<String>(
+                    value: opt,
+                    groupValue: controller.selectedRadio[name],
+                    title: Text(opt, softWrap: true),
+                    onChanged: (val) =>
+                        controller.selectedRadio[name] = val!,
+                    dense: true,
                     contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      opt,
-                      softWrap: true,
-                    ),
-                    trailing: Checkbox(
-                      value: selected,
-                      onChanged: (_) => controller.toggleMultiSelect(name, opt),
-                    ),
-                    onTap: () => controller.toggleMultiSelect(name, opt),
-                  );
-                }).toList(),
-              )),
-          const SizedBox(height: 16),
-        ];
+                  ),
+                );
+              }).toList(),
+            )),
+        const SizedBox(height: 16),
+      ];
 
-      case 13: // Image picker
-        return [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: controller.pickImage,
-            icon: const Icon(Icons.add_a_photo),
-            label: const Text("Pick or Capture Image"),
-          ),
-          const SizedBox(height: 8),
-          Obx(() {
-            final image = controller.pickedImage.value;
-            if (image == null) return const SizedBox();
-            return Container(
-              width: double.infinity,
-              height: 150,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  File(image.path),
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: 150,
-                ),
-              ),
-            );
-          }),
-          const SizedBox(height: 16),
-        ];
+    case 9: // Multi-select
+      final options = (field['ddn'] as String?)?.split(',') ?? [];
+      return [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Obx(() => Column(
+              children: options.map((opt) {
+                final selected =
+                    controller.selectedMulti[name]?.contains(opt) ?? false;
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(opt, softWrap: true),
+                  trailing: Checkbox(
+                    value: selected,
+                    onChanged: (_) => controller.toggleMultiSelect(name, opt),
+                  ),
+                  onTap: () => controller.toggleMultiSelect(name, opt),
+                );
+              }).toList(),
+            )),
+        const SizedBox(height: 16),
+      ];
 
-      default:
-        return [];
-    }
+    case 13: // Image picker
+      return [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        TextButton.icon(
+          onPressed: controller.pickImage,
+          icon: const Icon(Icons.add_a_photo),
+          label: const Text("Pick or Capture Image"),
+        ),
+        const SizedBox(height: 8),
+        Obx(() {
+          final image = controller.pickedImage.value;
+          if (image == null) return const SizedBox();
+          return Container(
+            width: double.infinity,
+            height: maxWidth > 500 ? 250 : 150,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.file(
+                File(image.path),
+                fit: BoxFit.cover,
+              ),
+            ),
+          );
+        }),
+        const SizedBox(height: 16),
+      ];
+
+    default:
+      return [];
   }
+}
 }
