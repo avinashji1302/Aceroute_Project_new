@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:ace_routes/controller/background/location_service.dart';
 import 'package:ace_routes/controller/connectivity/dependecy_injection.dart';
 import 'package:ace_routes/controller/fontSizeController.dart';
 import 'package:ace_routes/view/login_screen.dart';
@@ -30,7 +29,7 @@ void main() async {
     await logErrorToFile(
         details.exception.toString(), details.stack.toString());
   };
-  await initializeService(); // ⬅️ Call it here once
+
   // Catch uncaught async errors
   runZonedGuarded(() {
     Get.put(FontSizeController());

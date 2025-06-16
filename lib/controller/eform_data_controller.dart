@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:ace_routes/controller/background/location_service.dart';
+import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/database/Tables/eform_data_table.dart';
 import 'package:ace_routes/database/offlineTables/delete_sync_eform.dart';
 import 'package:ace_routes/model/eform_data_model.dart';
@@ -12,6 +13,7 @@ class EFormDataController extends GetxController {
   // Fetch EForm from the server and parse it
 
   final String oid;
+   final networkController = Get.find<NetworkController>();
 
   EFormDataController({required this.oid});
   var eFormsData = <EFormDataModel>[].obs; // Observable list

@@ -22,6 +22,8 @@ Future<void> LogoutDailBox(BuildContext context) async {
 
   void _handleLogout(BuildContext context) async {
     try {
+      // Navigate to Login screen
+      Get.offAll(() => LoginScreen());
       // Get current location
       final position = await location.getLocation();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -43,11 +45,11 @@ Future<void> LogoutDailBox(BuildContext context) async {
       );
 
       // Clean up state
-      Get.delete<LoginController>();
+     // Get.delete<LoginController>();
       Get.delete<EventController>();
 
       // Navigate to Login screen
-      Get.offAll(() => LoginScreen());
+     // Get.offAll(() => LoginScreen());
     } catch (e) {
       print("Error during logout: $e");
       // Optionally show a snackbar or dialog

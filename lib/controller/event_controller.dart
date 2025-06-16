@@ -5,8 +5,10 @@ import 'package:ace_routes/controller/eform_controller.dart';
 import 'package:ace_routes/controller/getOrderPart_controller.dart';
 import 'package:ace_routes/controller/priority_controller.dart';
 import 'package:ace_routes/database/Tables/OrderTypeDataTable.dart';
+import 'package:ace_routes/database/Tables/api_data_table.dart';
 import 'package:ace_routes/database/Tables/event_table.dart';
 import 'package:ace_routes/database/Tables/prority_table.dart';
+import 'package:ace_routes/model/login_model/token_api_response.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -30,7 +32,7 @@ class EventController extends GetxController {
 
   final EFormController eForm = Get.put(EFormController());
   final PriorityController priority = Get.put(PriorityController());
-
+  final networkController = Get.find<NetworkController>();
   final ClockOut clockOut = Get.put(ClockOut());
 
   var events = <Event>[].obs;
@@ -65,8 +67,8 @@ class EventController extends GetxController {
     await orderNoteController.fetchOrderNotesFromApi();
 
     //  await eForm.GetGenOrderDataForForm();
-    // await initializeService(); // Start background service
-    await fetchDataFromLogin(); // First, load data from SQLite to SharedPreferences
+    //  await initializeService(); // Start background service
+    // await fetchDataFromLogin(); // First, load data from SQLite to SharedPreferences
     final position = await location.getLocation();
     print("login : ${position.altitude}");
     await clockOut.executeAction(
@@ -75,6 +77,8 @@ class EventController extends GetxController {
         latitude: position.latitude!,
         longitude: position.longitude!);
 
+    await backgroundWork();
+
     Get.find<NetworkController>().enableSyncAfterLogin();
   }
 
@@ -82,6 +86,55 @@ class EventController extends GetxController {
   //   final result = await Connectivity().checkConnectivity();
   //   return result != ConnectivityResult.none;
   // }
+
+  //background
+
+  Future<void> backgroundWork() async {
+    List<TokenApiReponse> loginDataList = await ApiDataTable.fetchData();
+    String gpsMin="10";
+    String gpsMeter= "500";
+
+    for (var data in loginDataList) {
+      print("✅ Saved locChangeThreshold: ${data.locationChange}");
+      print("✅ Saved syncIntervalMinutes: ${data.gpsSync}");
+
+      gpsMeter=data.locationChange;
+      gpsMin=data.gpsSync;
+    }
+
+    List<Event> localEvents = await EventTable.fetchEvents();
+
+    Set<String> wkfSet =
+        localEvents.map((event) => event.wkf.toString()).toSet();
+    Map<String, String?> fetchedStatus =
+        await StatusTable.fetchNamesByIds(wkfSet.toList());
+
+    // Exclude "Complete" statuses
+    List<String> validOrderIds = localEvents
+        .where((event) => fetchedStatus[event.wkf] != "Complete")
+        .map((event) => event.id.toString())
+        .take(2)
+        .toList();
+
+    String lstoid = validOrderIds.isNotEmpty ? validOrderIds[0] : "0";
+    String nxtoid = validOrderIds.length > 1 ? validOrderIds[1] : "0";
+
+    print("lstoif $lstoid $nxtoid");
+
+    GeoServiceController geoService = Get.put(
+      GeoServiceController(
+        gpsSyncMins:gpsMin,
+        locChangeMeters:gpsMeter,
+        token: token,
+        nspace: nsp,
+        rid: rid,
+        lstoid: lstoid,
+        nxtoid: nxtoid,
+      ),
+    );
+
+    print("some $geoService");
+  }
 
   Future<void> loadAllTerms() async {
     //print("Loading all terms...");

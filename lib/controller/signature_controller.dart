@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:ace_routes/controller/background/location_service.dart';
+import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/database/Tables/file_meta_table.dart';
 import 'package:ace_routes/database/databse_helper.dart';
 import 'package:ace_routes/database/offlineTables/upload_sync_table.dart';
@@ -18,6 +19,7 @@ import '../core/colors/Constants.dart';
 
 class SignatureController extends GetxController {
   RxList<ui.Image> signatures = <ui.Image>[].obs;
+   final networkController = Get.find<NetworkController>();
   final int maxSignatures = 6;
   var images = <File>[].obs;
   var selectedIndices = <int>[].obs;

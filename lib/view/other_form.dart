@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:ace_routes/controller/background/location_service.dart';
+import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/controller/dynamic_form_controller.dart';
 import 'package:ace_routes/controller/eform_data_controller.dart';
 import 'package:ace_routes/core/colors/Constants.dart';
@@ -24,6 +25,7 @@ class DynamicFormPage extends StatelessWidget {
   final String editOrsaveId; // 0 for save existing id  for edit
   final DynamicFormController controller;
   final eformDataControlle = Get.find<EFormDataController>();
+  final networkController = Get.find<NetworkController>();
 
   DynamicFormPage({
     required this.id,
@@ -289,137 +291,136 @@ class DynamicFormPage extends StatelessWidget {
           ),
         ],
       ),
-     body: LayoutBuilder(
-  builder: (context, constraints) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minWidth: constraints.maxWidth),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (var field in frm) ..._buildField(field, constraints.maxWidth),
-            if (!hasImageField)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Text("No image field found. Here's your form."),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var field in frm)
+                    ..._buildField(field, constraints.maxWidth),
+                  if (!hasImageField)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Text("No image field found. Here's your form."),
+                    ),
+                  const SizedBox(height: 24),
+                ],
               ),
-            const SizedBox(height: 24),
-          ],
-        ),
+            ),
+          );
+        },
       ),
-    );
-  },
-),
-
     );
   }
 
   List<Widget> _buildField(Map<String, dynamic> field, double maxWidth) {
-  final tid = field['tid'];
-  final name = field['nm'];
-  final label = field['lbl'] ?? '';
+    final tid = field['tid'];
+    final name = field['nm'];
+    final label = field['lbl'] ?? '';
 
-  switch (tid) {
-    case 1: // Text input
-      controller.textControllers.putIfAbsent(
-        name,
-        () => TextEditingController(),
-      );
-      return [
-        TextField(
-          controller: controller.textControllers[name],
-          decoration: InputDecoration(
-            hintText: '$label',
-            border: const OutlineInputBorder(),
+    switch (tid) {
+      case 1: // Text input
+        controller.textControllers.putIfAbsent(
+          name,
+          () => TextEditingController(),
+        );
+        return [
+          TextField(
+            controller: controller.textControllers[name],
+            decoration: InputDecoration(
+              hintText: '$label',
+              border: const OutlineInputBorder(),
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-      ];
+          const SizedBox(height: 16),
+        ];
 
-    case 8: // Radio buttons
-      final options = (field['ddn'] as String?)?.split(',') ?? [];
-      return [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Obx(() => Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: options.map((opt) {
-                return SizedBox(
-                  width: maxWidth > 400 ? (maxWidth / 2) - 24 : maxWidth - 32,
-                  child: RadioListTile<String>(
-                    value: opt,
-                    groupValue: controller.selectedRadio[name],
-                    title: Text(opt, softWrap: true),
-                    onChanged: (val) =>
-                        controller.selectedRadio[name] = val!,
-                    dense: true,
+      case 8: // Radio buttons
+        final options = (field['ddn'] as String?)?.split(',') ?? [];
+        return [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Obx(() => Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: options.map((opt) {
+                  return SizedBox(
+                    width: maxWidth > 250 ? (maxWidth / 2) - 24 : maxWidth - 32,
+                    child: RadioListTile<String>(
+                      value: opt,
+                      groupValue: controller.selectedRadio[name],
+                      title: Text(opt, softWrap: true),
+                      onChanged: (val) => controller.selectedRadio[name] = val!,
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  );
+                }).toList(),
+              )),
+          const SizedBox(height: 16),
+        ];
+
+      case 9: // Multi-select
+        final options = (field['ddn'] as String?)?.split(',') ?? [];
+        return [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Obx(() => Column(
+                children: options.map((opt) {
+                  final selected =
+                      controller.selectedMulti[name]?.contains(opt) ?? false;
+                  return ListTile(
                     contentPadding: EdgeInsets.zero,
-                  ),
-                );
-              }).toList(),
-            )),
-        const SizedBox(height: 16),
-      ];
+                    title: Text(opt, softWrap: true),
+                    trailing: Checkbox(
+                      value: selected,
+                      onChanged: (_) => controller.toggleMultiSelect(name, opt),
+                    ),
+                    onTap: () => controller.toggleMultiSelect(name, opt),
+                  );
+                }).toList(),
+              )),
+          const SizedBox(height: 16),
+        ];
 
-    case 9: // Multi-select
-      final options = (field['ddn'] as String?)?.split(',') ?? [];
-      return [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Obx(() => Column(
-              children: options.map((opt) {
-                final selected =
-                    controller.selectedMulti[name]?.contains(opt) ?? false;
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(opt, softWrap: true),
-                  trailing: Checkbox(
-                    value: selected,
-                    onChanged: (_) => controller.toggleMultiSelect(name, opt),
-                  ),
-                  onTap: () => controller.toggleMultiSelect(name, opt),
-                );
-              }).toList(),
-            )),
-        const SizedBox(height: 16),
-      ];
-
-    case 13: // Image picker
-      return [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        TextButton.icon(
-          onPressed: controller.pickImage,
-          icon: const Icon(Icons.add_a_photo),
-          label: const Text("Pick or Capture Image"),
-        ),
-        const SizedBox(height: 8),
-        Obx(() {
-          final image = controller.pickedImage.value;
-          if (image == null) return const SizedBox();
-          return Container(
-            width: double.infinity,
-            height: maxWidth > 500 ? 250 : 150,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.file(
-                File(image.path),
-                fit: BoxFit.cover,
+      case 13: // Image picker
+        return [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: controller.pickImage,
+            icon: const Icon(Icons.add_a_photo),
+            label: const Text("Pick or Capture Image"),
+          ),
+          const SizedBox(height: 8),
+          Obx(() {
+            final image = controller.pickedImage.value;
+            if (image == null) return const SizedBox();
+            return Container(
+              width: double.infinity,
+              height: maxWidth > 500 ? 250 : 150,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8),
               ),
-            ),
-          );
-        }),
-        const SizedBox(height: 16),
-      ];
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  File(image.path),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 16),
+        ];
 
-    default:
-      return [];
+      default:
+        return [];
+    }
   }
-}
 }
