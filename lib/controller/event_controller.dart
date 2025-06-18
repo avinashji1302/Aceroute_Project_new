@@ -25,275 +25,262 @@ import 'all_terms_controller.dart';
 import 'orderNoteConroller.dart';
 
 class EventController extends GetxController {
+  // Controllers
   final allTermsController = Get.put(AllTermsController());
   final getOrderPart = Get.put(GetOrderPartController());
-  final OrderNoteController orderNoteController =
-      Get.put(OrderNoteController());
-
-  final EFormController eForm = Get.put(EFormController());
-  final PriorityController priority = Get.put(PriorityController());
+  final orderNoteController = Get.put(OrderNoteController());
+  final eForm = Get.put(EFormController());
+  final priority = Get.put(PriorityController());
+  final clockOut = Get.put(ClockOut());
   final networkController = Get.find<NetworkController>();
-  final ClockOut clockOut = Get.put(ClockOut());
 
+  // Observables
   var events = <Event>[].obs;
   var isLoading = false.obs;
-  // String wkf = "";
-  // String tid = '';
-  int daysToAdd = 1;
-  RxString currentStatus = "Loading...".obs; // Reactive variable
-  //RxString categoryName = "".obs;
+  var currentStatus = "Loading...".obs;
 
-  var nameMap = <String, String?>{}.obs; // Observable map
-  var categoryMap = <String, String?>{}.obs; // Observable map
+  var nameMap = <String, String?>{}.obs;
+  var categoryMap = <String, String?>{}.obs;
   var priorityId = <String, String?>{}.obs;
   var priorityColorsId = <String, String?>{}.obs;
 
-  //---------------------------
-  DateTime? selectedDate; // null means default to today
-
-  //---------location for clockedin
-  Location location = new Location();
+  // Config
+  int daysToAdd = 1;
+  DateTime? selectedDate;
+  final Location location = Location();
 
   @override
   void onInit() async {
     super.onInit();
-    isLoading(true); // Show loading spinner
-    await loadAllTerms();
-    await fetchEvents();
-    isLoading(false); // Show loading spinner
-
-    //Fetching and saving note in db
-    await orderNoteController.fetchDetailsFromDb();
-    await orderNoteController.fetchOrderNotesFromApi();
-
-    //  await eForm.GetGenOrderDataForForm();
-    //  await initializeService(); // Start background service
-    // await fetchDataFromLogin(); // First, load data from SQLite to SharedPreferences
-    final position = await location.getLocation();
-    print("login : ${position.altitude}");
-    await clockOut.executeAction(
-        tid: 11,
-        timestamp: DateTime.now().millisecondsSinceEpoch,
-        latitude: position.latitude!,
-        longitude: position.longitude!);
-
-    await backgroundWork();
-
-    Get.find<NetworkController>().enableSyncAfterLogin();
-  }
-
-  // Future<bool> hasInternet() async {
-  //   final result = await Connectivity().checkConnectivity();
-  //   return result != ConnectivityResult.none;
-  // }
-
-  //background
-
-  Future<void> backgroundWork() async {
-    List<TokenApiReponse> loginDataList = await ApiDataTable.fetchData();
-    String gpsMin="10";
-    String gpsMeter= "500";
-
-    for (var data in loginDataList) {
-      print("✅ Saved locChangeThreshold: ${data.locationChange}");
-      print("✅ Saved syncIntervalMinutes: ${data.gpsSync}");
-
-      gpsMeter=data.locationChange;
-      gpsMin=data.gpsSync;
-    }
-
-    List<Event> localEvents = await EventTable.fetchEvents();
-
-    Set<String> wkfSet =
-        localEvents.map((event) => event.wkf.toString()).toSet();
-    Map<String, String?> fetchedStatus =
-        await StatusTable.fetchNamesByIds(wkfSet.toList());
-
-    // Exclude "Complete" statuses
-    List<String> validOrderIds = localEvents
-        .where((event) => fetchedStatus[event.wkf] != "Complete")
-        .map((event) => event.id.toString())
-        .take(2)
-        .toList();
-
-    String lstoid = validOrderIds.isNotEmpty ? validOrderIds[0] : "0";
-    String nxtoid = validOrderIds.length > 1 ? validOrderIds[1] : "0";
-
-    print("lstoif $lstoid $nxtoid");
-
-    GeoServiceController geoService = Get.put(
-      GeoServiceController(
-        gpsSyncMins:gpsMin,
-        locChangeMeters:gpsMeter,
-        token: token,
-        nspace: nsp,
-        rid: rid,
-        lstoid: lstoid,
-        nxtoid: nxtoid,
-      ),
-    );
-
-    print("some $geoService");
-  }
-
-  Future<void> loadAllTerms() async {
-    //print("Loading all terms...");
-
-    await allTermsController.fetchStatusList();
-    await allTermsController.fetchAndStoreOrderTypes();
-    await allTermsController.displayLoginResponseData();
-    Database db = await DatabaseHelper().database;
-    await allTermsController.GetAllPartTypes();
-
-    await allTermsController.fetchAndStoreGTypes(db);
-    await allTermsController.GetAllTerms();
-
-    await AllTerms.getTerm();
-
-    await priority.getPriorityData();
-  }
-
-  Future<void> fetchEvents() async {
-    print("time zone is: ${DateTime.now().timeZoneName}");
-    DateTime currentDate = selectedDate ?? DateTime.now();
-    DateTime secondDate = currentDate.add(Duration(days: daysToAdd));
-    String formattedCurrentDate = DateFormat('yyyy-MM-dd').format(currentDate);
-    String formattedSecondDate = DateFormat('yyyy-MM-dd').format(secondDate);
-
     isLoading(true);
-    var url =
-        "https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid&action=getorders&tz=${DateTime.now().timeZoneName}&from=${formattedCurrentDate}&to=${formattedSecondDate}";
-
-    print("Fetching events from URL: $url");
-
     try {
-      var request = http.Request('GET', Uri.parse(url));
-      http.StreamedResponse response = await request.send();
-
-      if (response.statusCode == 200) {
-        String xmlString = await response.stream.bytesToString();
-        print("Raw XML response: $xmlString");
-
-        // Parse and store the events
-        parseXmlResponse(xmlString);
-        await loadEventsFromDatabase();
-      } else {
-        print("Error fetching events: ${response.statusCode}");
-      }
+      await loadAllTerms();
+      await fetchEvents();
+      await _fetchAndSyncNotes();
+      await _logInitialLocation();
+      await _startBackgroundService();
+      networkController.enableSyncAfterLogin();
     } catch (e) {
-      print("Error fetching events: $e");
+      print("❌ Error in onInit: $e");
     } finally {
       isLoading(false);
     }
   }
 
-  void parseXmlResponse(String responseBody) {
-    final document = xml.XmlDocument.parse(responseBody);
-    final eventElements = document.findAllElements('event');
-
-    List<Event> fetchedEvents = eventElements.map((eventElement) {
-      return Event(
-        id: _getText(eventElement, 'id'),
-        cid: _getText(eventElement, 'cid'),
-        start_date: _getText(eventElement, 'start_date'),
-        etm: _getText(eventElement, 'etm'),
-        end_date: _getText(eventElement, 'end_date'),
-        nm: _getText(eventElement, 'nm'),
-        wkf: _getText(eventElement, 'wkf'),
-        alt: _getText(eventElement, 'alt'),
-        po: _getText(eventElement, 'po'),
-        inv: _getText(eventElement, 'inv'),
-        tid: _getText(eventElement, 'tid'),
-        pid: _getText(eventElement, 'pid'),
-        rid: _getText(eventElement, 'rid'),
-        ridcmt: _getText(eventElement, 'ridcmt'),
-        dtl: _getText(eventElement, 'dtl'),
-        lid: _getText(eventElement, 'lid'),
-        cntid: _getText(eventElement, 'cntid'),
-        flg: _getText(eventElement, 'flg'),
-        est: _getText(eventElement, 'est'),
-        lst: _getText(eventElement, 'lst'),
-        ctid: _getText(eventElement, 'ctid'),
-        ctpnm: _getText(eventElement, 'ctpnm'),
-        ltpnm: _getText(eventElement, 'ltpnm'),
-        cnm: _getText(eventElement, 'cnm'),
-        address: _getText(eventElement, 'adr'),
-        geo: _getText(eventElement, 'geo'),
-        cntnm: _getText(eventElement, 'cntnm'),
-        tel: _getText(eventElement, 'tel'),
-        ordfld1: _getText(eventElement, 'ordfld1'),
-        ttid: _getText(eventElement, 'ttid'),
-        cfrm: _getText(eventElement, 'cfrm'),
-        cprt: _getText(eventElement, 'cprt'),
-        xid: _getText(eventElement, 'xid'),
-        cxid: _getText(eventElement, 'cxid'),
-        tz: _getText(eventElement, 'tz'),
-        zip: _getText(eventElement, 'zip'),
-        fmeta: _getText(eventElement, 'fmeta'),
-        cimg: _getText(eventElement, 'cimg'),
-        caud: _getText(eventElement, 'caud'),
-        csig: _getText(eventElement, 'csig'),
-        cdoc: _getText(eventElement, 'cdoc'),
-        cnot: _getText(eventElement, 'cnot'),
-        dur: _getText(eventElement, 'dur'),
-        val: _getText(eventElement, 'val'),
-        rgn: _getText(eventElement, 'rgn'),
-        upd: _getText(eventElement, 'upd'),
-        by: _getText(eventElement, 'by'),
-        znid: _getText(eventElement, 'znid'),
-      );
-    }).toList();
-
-    for (Event event in fetchedEvents) {
-      //  //print("Event is ${event.geo}");
-      EventTable.insertEvent(event);
-      // //print("Event added to database: ${event.toJson()['id']}");
+  Future<void> _fetchAndSyncNotes() async {
+    try {
+      await orderNoteController.fetchDetailsFromDb();
+      await orderNoteController.fetchOrderNotesFromApi();
+    } catch (e) {
+      print("❌ Error syncing order notes: $e");
     }
+  }
 
-    events.assignAll(fetchedEvents);
-    // //print("Fetched and stored ${fetchedEvents.length} events");
+  Future<void> _logInitialLocation() async {
+    try {
+      final position = await location.getLocation();
+      print(
+          "📍 Initial login location: ${position.latitude}, ${position.longitude}");
+      await clockOut.executeAction(
+        tid: 11,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+        latitude: position.latitude!,
+        longitude: position.longitude!,
+      );
+    } catch (e) {
+      print("❌ Error logging initial location: $e");
+    }
+  }
+
+  Future<void> _startBackgroundService() async {
+    try {
+      List<TokenApiReponse> loginDataList = await ApiDataTable.fetchData();
+      String gpsMin =
+          loginDataList.isNotEmpty ? loginDataList.first.gpsSync : "10";
+      String gpsMeter =
+          loginDataList.isNotEmpty ? loginDataList.first.locationChange : "500";
+
+      List<Event> localEvents = await EventTable.fetchEvents();
+      Set<String> wkfSet = localEvents.map((e) => e.wkf.toString()).toSet();
+
+      Map<String, String?> fetchedStatus =
+          await StatusTable.fetchNamesByIds(wkfSet.toList());
+
+      List<String> validOrderIds = localEvents
+          .where((e) => fetchedStatus[e.wkf] != "Complete")
+          .map((e) => e.id.toString())
+          .take(2)
+          .toList();
+
+      String lstoid = validOrderIds.isNotEmpty ? validOrderIds[0] : "0";
+      String nxtoid = validOrderIds.length > 1 ? validOrderIds[1] : "0";
+
+      print("📦 lstoid: $lstoid, nxtoid: $nxtoid");
+
+      Get.put(GeoServiceController(
+        gpsSyncMins: gpsMin,
+        locChangeMeters: gpsMeter,
+        token: token,
+        nspace: nsp,
+        rid: rid,
+        lstoid: lstoid,
+        nxtoid: nxtoid,
+      ));
+    } catch (e) {
+      print("❌ Error in background service: $e");
+    }
+  }
+
+  Future<void> loadAllTerms() async {
+    try {
+      Database db = await DatabaseHelper().database;
+      await allTermsController.fetchStatusList();
+      await allTermsController.fetchAndStoreOrderTypes();
+      await allTermsController.displayLoginResponseData();
+      await allTermsController.GetAllPartTypes();
+      await allTermsController.fetchAndStoreGTypes(db);
+      await allTermsController.GetAllTerms();
+      await AllTerms.getTerm();
+      await priority.getPriorityData();
+    } catch (e) {
+      print("❌ Error loading all terms: $e");
+    }
+  }
+
+  Future<void> fetchEvents() async {
+    try {
+      isLoading(true);
+
+      // Use local dates
+      DateTime currentDate = selectedDate ?? DateTime.now();
+      DateTime secondDate = currentDate.add(Duration(days: daysToAdd));
+
+      // Format dates in yyyy-MM-dd using local time
+      String fromDate = DateFormat('yyyy-MM-dd').format(currentDate);
+      String toDate = DateFormat('yyyy-MM-dd').format(secondDate);
+
+      // Get timezone offset in minutes (e.g., +330 for IST)
+      int tzOffsetMinutes = DateTime.now().timeZoneOffset.inMinutes;
+
+      // Compose URL
+      String url =
+          "https://$baseUrl/mobi?token=$token&nspace=$nsp&geo=$geo&rid=$rid"
+          "&action=getorders&tz=$tzOffsetMinutes&from=$fromDate&to=$toDate";
+
+      print("🌐 Fetching events: $url");
+
+      var response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        parseXmlResponse(response.body);
+        await loadEventsFromDatabase();
+      } else {
+        print("❌ Failed to fetch events: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("❌ Error fetching events: $e");
+    } finally {
+      isLoading(false);
+    }
+  }
+
+  void parseXmlResponse(String xmlString) {
+    try {
+      final document = xml.XmlDocument.parse(xmlString);
+      final eventElements = document.findAllElements('event');
+
+      List<Event> fetchedEvents = eventElements.map((element) {
+        return Event(
+          id: _getText(element, 'id'),
+          cid: _getText(element, 'cid'),
+          start_date: _getText(element, 'start_date'),
+          etm: _getText(element, 'etm'),
+          end_date: _getText(element, 'end_date'),
+          nm: _getText(element, 'nm'),
+          wkf: _getText(element, 'wkf'),
+          alt: _getText(element, 'alt'),
+          po: _getText(element, 'po'),
+          inv: _getText(element, 'inv'),
+          tid: _getText(element, 'tid'),
+          pid: _getText(element, 'pid'),
+          rid: _getText(element, 'rid'),
+          ridcmt: _getText(element, 'ridcmt'),
+          dtl: _getText(element, 'dtl'),
+          lid: _getText(element, 'lid'),
+          cntid: _getText(element, 'cntid'),
+          flg: _getText(element, 'flg'),
+          est: _getText(element, 'est'),
+          lst: _getText(element, 'lst'),
+          ctid: _getText(element, 'ctid'),
+          ctpnm: _getText(element, 'ctpnm'),
+          ltpnm: _getText(element, 'ltpnm'),
+          cnm: _getText(element, 'cnm'),
+          address: _getText(element, 'adr'),
+          geo: _getText(element, 'geo'),
+          cntnm: _getText(element, 'cntnm'),
+          tel: _getText(element, 'tel'),
+          ordfld1: _getText(element, 'ordfld1'),
+          ttid: _getText(element, 'ttid'),
+          cfrm: _getText(element, 'cfrm'),
+          cprt: _getText(element, 'cprt'),
+          xid: _getText(element, 'xid'),
+          cxid: _getText(element, 'cxid'),
+          tz: _getText(element, 'tz'),
+          zip: _getText(element, 'zip'),
+          fmeta: _getText(element, 'fmeta'),
+          cimg: _getText(element, 'cimg'),
+          caud: _getText(element, 'caud'),
+          csig: _getText(element, 'csig'),
+          cdoc: _getText(element, 'cdoc'),
+          cnot: _getText(element, 'cnot'),
+          dur: _getText(element, 'dur'),
+          val: _getText(element, 'val'),
+          rgn: _getText(element, 'rgn'),
+          upd: _getText(element, 'upd'),
+          by: _getText(element, 'by'),
+          znid: _getText(element, 'znid'),
+        );
+      }).toList();
+
+      for (final event in fetchedEvents) {
+        EventTable.insertEvent(event);
+      }
+
+      events.assignAll(fetchedEvents);
+    } catch (e) {
+      print("❌ Error parsing XML: $e");
+    }
+  }
+
+  Future<void> loadEventsFromDatabase() async {
+    try {
+      isLoading(true);
+
+      List<Event> localEvents = await EventTable.fetchEvents();
+      events.assignAll(localEvents);
+
+      // Unique IDs
+      Set<String> wkfSet = localEvents.map((e) => e.wkf).toSet();
+      Set<String> tidSet = localEvents.map((e) => e.tid).toSet();
+      Set<String> pidSet = localEvents.map((e) => e.pid).toSet();
+
+      nameMap.value = await StatusTable.fetchNamesByIds(wkfSet.toList());
+      categoryMap.value =
+          await OrderTypeDataTable.fetchCategoriesByIds(tidSet.toList());
+      priorityId.value =
+          await PriorityTable.fetchPrioritiesByIds(pidSet.toList());
+      priorityColorsId.value =
+          await PriorityTable.fetchPrioritiesColorsByIds(pidSet.toList());
+    } catch (e) {
+      print("❌ Error loading events from DB: $e");
+    } finally {
+      isLoading(false);
+    }
   }
 
   String _getText(xml.XmlElement element, String tagName) {
     return element.findElements(tagName).isNotEmpty
         ? element.findElements(tagName).single.text
         : '';
-  }
-
-  Future<void> loadEventsFromDatabase() async {
-    isLoading(true);
-    try {
-      List<Event> localEvents = await EventTable.fetchEvents();
-      events.assignAll(localEvents);
-      //  //print("Loaded ${localEvents.length} events from database");
-
-      // Extract unique wkf and tid values
-      Set<String> wkfSet = localEvents.map((event) => event.wkf).toSet();
-      Set<String> tidSet = localEvents.map((event) => event.tid).toSet();
-      Set<String> pidSet = localEvents.map((event) => event.pid).toSet();
-
-      //print("pidSet $pidSet");
-      // Fetch all names and categories in batch
-      Map<String, String?> FetchedStatus =
-          await StatusTable.fetchNamesByIds(wkfSet.toList());
-
-      Map<String, String?> fetchedCategory =
-          await OrderTypeDataTable.fetchCategoriesByIds(tidSet.toList());
-
-      Map<String, String?> fetchedValuePid =
-          await PriorityTable.fetchPrioritiesByIds(pidSet.toList());
-      Map<String, String?> fetchedColorPid =
-          await PriorityTable.fetchPrioritiesColorsByIds(pidSet.toList());
-
-      // Update status and categories dynamically
-      nameMap.value = await FetchedStatus;
-      categoryMap.value = await fetchedCategory;
-      priorityId.value = await fetchedValuePid;
-      priorityColorsId.value = await fetchedColorPid;
-    } catch (e) {
-      print("Error loading events from database: $e");
-    } finally {
-      isLoading(false);
-    }
   }
 }

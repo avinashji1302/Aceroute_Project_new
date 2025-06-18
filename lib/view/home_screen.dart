@@ -40,7 +40,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final HomeController homeController = Get.put(HomeController());
-  final Completer<GoogleMapController> _mapController = Completer();
+  // final Completer<GoogleMapController> _mapController = Completer();
   final LoginController loginController =
       Get.find<LoginController>(); // Accessing LoginController
   final FileMetaController fileMetaController = Get.put(FileMetaController());
