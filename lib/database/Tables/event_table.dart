@@ -1,7 +1,5 @@
-import 'package:ace_routes/controller/event_controller.dart';
 import 'package:ace_routes/database/databse_helper.dart';
 import 'package:ace_routes/model/event_model.dart';
-import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
 class EventTable {

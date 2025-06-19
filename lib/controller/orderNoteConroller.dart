@@ -1,8 +1,6 @@
 import 'dart:convert';
 
-import 'package:ace_routes/core/xml_to_json_converter.dart';
 import 'package:get/get.dart';
-import '../core/Constants.dart';
 import '../core/colors/Constants.dart';
 import '../database/Tables/api_data_table.dart';
 import '../database/Tables/event_table.dart';
@@ -15,7 +13,6 @@ import '../database/Tables/order_note_table.dart';
 import 'package:xml/xml.dart';
 import 'package:http/http.dart' as http;
 
-import 'event_controller.dart';
 
 class OrderNoteController extends GetxController {
   String oid = "";

@@ -1,12 +1,9 @@
-import 'package:ace_routes/view/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controller/event_controller.dart';
 import '../controller/vehicle_controller.dart';
 import '../controller/fontSizeController.dart';
 import '../core/Constants.dart';
 import '../core/colors/Constants.dart';
-import '../view/appbar.dart';
 
 class VehicleDetails extends StatefulWidget {
   final String id;

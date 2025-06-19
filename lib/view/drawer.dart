@@ -1,24 +1,16 @@
 import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/controller/event_controller.dart';
-import 'package:ace_routes/controller/homeController.dart';
 import 'package:ace_routes/controller/loginController.dart';
-import 'package:ace_routes/database/databse_helper.dart';
 import 'package:ace_routes/view/change_pass_screen.dart';
-import 'package:ace_routes/view/home_screen.dart';
-import 'package:ace_routes/view/login_screen.dart';
 import 'package:ace_routes/view/sync_popup.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ace_routes/controller/drawerController.dart';
-import 'package:sqflite/sqlite_api.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/services.dart';
 import 'package:location/location.dart' as loc;
 import '../Widgets/datepicker_dailog.dart';
 import '../Widgets/fontsize_dailog.dart';
 import '../Widgets/logout_dailogbox.dart';
-import '../controller/all_terms_controller.dart';
-import '../controller/clockout/clockout_controller.dart';
 import '../controller/fontSizeController.dart';
 
 class DrawerWidget extends StatelessWidget {

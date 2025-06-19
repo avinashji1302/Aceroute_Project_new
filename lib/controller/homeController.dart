@@ -7,10 +7,6 @@ import 'package:ace_routes/model/login_model/login_response.dart';
 import 'package:ace_routes/model/login_model/token_api_response.dart';
 import 'package:ace_routes/controller/pubnub/pubnub_service.dart';
 import 'package:get/get.dart';
-import 'package:location/location.dart' as locationLib;
-import 'package:permission_handler/permission_handler.dart'
-    as permissionHandlerLib;
-import 'package:http/http.dart' as http;
 
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:google_maps_flutter/google_maps_flutter.dart';

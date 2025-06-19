@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:ace_routes/controller/background/location_service.dart';
 import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/database/Tables/eform_data_table.dart';
 import 'package:ace_routes/database/offlineTables/delete_sync_eform.dart';

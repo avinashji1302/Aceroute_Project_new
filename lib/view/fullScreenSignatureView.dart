@@ -1,7 +1,5 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
 import '../controller/get_media_file.dart';
 

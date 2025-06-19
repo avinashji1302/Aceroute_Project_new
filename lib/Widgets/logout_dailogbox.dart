@@ -1,15 +1,12 @@
 import 'package:ace_routes/controller/clockout/logout_controller.dart';
 import 'package:ace_routes/controller/event_controller.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:location/location.dart';
 
 
 import '../controller/clockout/clockout_controller.dart';
 import '../controller/fontSizeController.dart';
-import '../controller/loginController.dart';
 import '../view/login_screen.dart';
 
 Future<void> LogoutDailBox(BuildContext context) async {

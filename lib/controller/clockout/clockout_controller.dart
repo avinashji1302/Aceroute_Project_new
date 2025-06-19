@@ -1,4 +1,3 @@
-import 'package:ace_routes/controller/background/location_service.dart';
 import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/core/colors/Constants.dart';
 import 'package:ace_routes/database/offlineTables/clockout_sync_table.dart';

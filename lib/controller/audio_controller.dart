@@ -1,5 +1,4 @@
 
-import 'package:ace_routes/controller/background/location_service.dart';
 import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/database/Tables/file_meta_table.dart';
 import 'package:ace_routes/database/databse_helper.dart';

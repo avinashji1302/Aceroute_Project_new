@@ -1,9 +1,6 @@
-import 'dart:io';
 
-import 'package:ace_routes/controller/http_connection.dart';
 import 'package:ace_routes/controller/location/location_permission.dart';
 import 'package:ace_routes/controller/loginController.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

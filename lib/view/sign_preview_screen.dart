@@ -79,7 +79,6 @@ class AddSignatureScreen extends StatelessWidget {
 */
 
 
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';

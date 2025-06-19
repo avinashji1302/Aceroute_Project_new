@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:ace_routes/Widgets/error_handling_login.dart';
 import 'package:ace_routes/controller/all_terms_controller.dart';
 import 'package:ace_routes/core/Constants.dart';
@@ -7,17 +5,14 @@ import 'package:ace_routes/core/colors/Constants.dart';
 import 'package:ace_routes/database/Tables/api_data_table.dart';
 import 'package:ace_routes/database/Tables/login_response_table.dart';
 import 'package:ace_routes/database/Tables/version_api_table.dart';
-import 'package:ace_routes/database/databse_helper.dart';
 import 'package:ace_routes/model/login_model/login_response.dart';
 import 'package:ace_routes/model/login_model/version_model.dart';
 import 'package:ace_routes/model/login_model/token_api_response.dart';
 import 'package:ace_routes/view/home_screen.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pub_semver/pub_semver.dart';
-import 'package:pubnub/pubnub.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:url_launcher/url_launcher.dart';

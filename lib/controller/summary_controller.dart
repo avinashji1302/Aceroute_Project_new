@@ -2,7 +2,6 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart'; // For date formatting
 import '../database/Tables/event_table.dart'; // EventTable for DB operations
 import '../model/event_model.dart';
-import 'event_controller.dart';
 
 class SummaryController extends GetxController {
   // Collecting summary data

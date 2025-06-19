@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'package:ace_routes/core/Constants.dart';
-import 'package:ace_routes/core/xml_to_json_converter.dart';
 import 'package:ace_routes/database/Tables/OrderTypeDataTable.dart';
 import 'package:ace_routes/database/Tables/login_response_table.dart';
 import 'package:ace_routes/database/Tables/terms_data_table.dart';
@@ -9,9 +7,7 @@ import 'package:ace_routes/model/login_model/login_response.dart';
 import 'package:ace_routes/model/login_model/token_api_response.dart';
 import 'package:ace_routes/model/terms_model.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:xml/xml.dart';

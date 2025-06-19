@@ -16,7 +16,6 @@ import 'package:ace_routes/view/status_screen.dart';
 import 'package:ace_routes/view/summary_screen.dart';
 import 'package:ace_routes/view/vehicle_details.dart';
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart' as geo;

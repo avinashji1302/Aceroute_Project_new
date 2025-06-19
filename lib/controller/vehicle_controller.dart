@@ -2,8 +2,6 @@ import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/database/Tables/order_note_table.dart';
 import 'package:ace_routes/database/offlineTables/vehicle_sync_table.dart';
 import 'package:ace_routes/model/order_note_model.dart';
-import 'package:ace_routes/view/home_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../core/colors/Constants.dart';
 import '../database/Tables/event_table.dart';

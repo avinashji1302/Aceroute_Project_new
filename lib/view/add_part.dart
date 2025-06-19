@@ -1,8 +1,5 @@
 import 'package:ace_routes/controller/barcode_controller.dart';
 import 'package:ace_routes/core/Constants.dart';
-import 'package:ace_routes/core/colors/Constants.dart';
-import 'package:ace_routes/view/appbar.dart';
-import 'package:ace_routes/view/part.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

@@ -23,8 +23,8 @@ class AudioController {
 
     // Listener for player state changes
     _player.onProgress!.listen((e) {
-      if (e != null && e.duration != null && e.position != null) {
-        if (e.position! >= e.duration!) {
+      if (e.duration != null) {
+        if (e.position >= e.duration) {
           _stopPlayback();
         }
       }

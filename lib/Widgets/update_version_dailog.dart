@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart'; // For opening the Play Store
+// For opening the Play Store
 
 class UpdateDialog extends StatelessWidget {
   final VoidCallback onUpdate;

@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:ace_routes/controller/background/location_service.dart';
 import 'package:ace_routes/controller/connectivity/network_controller.dart';
 import 'package:ace_routes/controller/eform_data_controller.dart';
 import 'package:ace_routes/core/colors/Constants.dart';

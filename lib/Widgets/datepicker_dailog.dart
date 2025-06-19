@@ -1,10 +1,8 @@
 import 'package:ace_routes/controller/event_controller.dart';
 import 'package:ace_routes/database/Tables/event_table.dart';
 import 'package:ace_routes/view/home_screen.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
 import '../controller/fontSizeController.dart';
 import '../controller/homeController.dart';

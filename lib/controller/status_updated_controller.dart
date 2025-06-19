@@ -82,40 +82,50 @@ class StatusControllers extends GetxController {
     final datas = await GTypeTable.fetchGTypesContainingCapacity(tid!);
 
     for (var data in datas) {
-      //fetch status to check weather we need to update the statsu or not?
-      final detailsMap = Map<String, dynamic>.from(data.details);
+  Map<String, dynamic> detailsMap;
+  try {
+    detailsMap = Map<String, dynamic>.from(data.details);
+  } catch (e) {
+    print("❌ Failed to convert details to Map for GType ID: ${data.id} → Error: $e");
+    continue;
+  }
 
-      final rules = detailsMap['rules'] as Map<String, dynamic>;
+  if (detailsMap['rules'] == null || detailsMap['rules'] is! Map<String, dynamic>) {
+    print("❌ 'rules' key is missing or not a Map in GType ID: ${data.id}");
+    continue;
+  }
 
-      List<String> statusList = [];
+  final rules = detailsMap['rules'] as Map<String, dynamic>;
 
-      if (rules['sts'] is String) {
-        statusList = (rules['sts'] as String).split(',');
-      } else if (rules['sts'] is List) {
-        statusList = (rules['sts'] as List).map((e) => e.toString()).toList();
-      }
+  List<String> statusList = [];
 
-      print('Count: ${rules['cnt']}');
-      print('Status List: $statusList');
+  if (rules['sts'] is String) {
+    statusList = (rules['sts'] as String).split(',');
+  } else if (rules['sts'] is List) {
+    statusList = (rules['sts'] as List).map((e) => e.toString()).toList();
+  }
 
-      if (statusList.contains(newWkf)) {
-        print("newKf $newWkf : ");
+  print('Count: ${rules['cnt']}');
+  print('Status List: $statusList');
 
-        List<EFormDataModel> formList =
-            await EFormDataTable.getDataGenTypeId(data.id);
+  if (statusList.contains(newWkf)) {
+    print("newKf $newWkf : ");
 
-        if (formList.isEmpty) {
-          Get.snackbar(
-              "Alert", "You could not change the status without adding form");
-          return;
-        } else {
-          print("form is there : ");
-        }
-        print("Performing action because status is 4 or 5");
-      } else {
-        print("No action needed");
-      }
+    List<EFormDataModel> formList =
+        await EFormDataTable.getDataGenTypeId(data.id);
+
+    if (formList.isEmpty) {
+      Get.snackbar("Alert", "You could not change the status without adding form");
+      return;
+    } else {
+      print("form is there : ");
     }
+
+    print("Performing action because status is 4 or 5");
+  } else {
+    print("No action needed");
+  }
+}
 
     // ✅ Always update local DB first
     await EventTable.updateOrder(oid, newWkf);
@@ -142,7 +152,7 @@ class StatusControllers extends GetxController {
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
-        print("✅ Synced with server");
+        print("✅ Synced with server ${response.body}");
       } else {
         print("⚠️ API Failed, saving to queue as fallback...");
         await StatusSyncTable.insert(oid, newWkf);

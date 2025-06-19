@@ -73,7 +73,7 @@ class GeoServiceController extends GetxController {
         .join("|");
     final timestamps = recordedPositions
         .map((pos) =>
-            pos.timestamp?.millisecondsSinceEpoch ??
+            pos.timestamp.millisecondsSinceEpoch ??
             DateTime.now().millisecondsSinceEpoch)
         .join("|");
 

@@ -6,7 +6,6 @@ import '../controller/fontSizeController.dart';
 import '../controller/summary_controller.dart';
 import '../core/Constants.dart';
 import '../core/colors/Constants.dart';
-import '../view/appbar.dart';
 
 class SummaryDetails extends StatelessWidget {
   final String id;
