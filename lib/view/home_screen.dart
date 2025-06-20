@@ -93,19 +93,17 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     try {
-      // Define the expected input format
-      DateFormat inputFormat = DateFormat("yyyy/MM/dd HH:mm Z");
+      // Parse the default DateTime.toString() format
+      DateTime date =
+          DateTime.parse(startDate).toLocal(); // Ensure local timezone
 
-      // Parse the date string into a DateTime object
-      DateTime date = inputFormat.parse(startDate);
-
-      // Format to "MMM" (e.g., Nov)
-      String formattedDate = DateFormat("MMM").format(date);
+      // Format to "MMM" (e.g., Jun)
+      String formattedDate = DateFormat("MMM").format(date); // e.g., Jun
 
       // Format local time
-      String localTime = DateFormat.jm().format(date.toLocal());
+      String localTime = DateFormat.jm().format(date); // e.g., 1:30 PM
 
-      return "$formattedDate, $localTime";
+      return "$formattedDate $localTime"; // e.g., Jun 1:30 PM
     } catch (e) {
       return "Invalid date";
     }
@@ -124,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: AppBar(
           title: Obx(() {
             return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(homeController.getFormattedDate(),
                     style: TextStyle(
@@ -211,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               "#000000"; // Default to black if null
                       priorityColorString = priorityColorString.replaceFirst(
                           "#", "0xFF"); // Convert to Flutter ARGB format
-
+                      print("stat ${event.start_date}");
                       final int priorityColor =
                           int.parse(priorityColorString); // Convert to int
                       return Card(

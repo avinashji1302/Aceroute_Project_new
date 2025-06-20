@@ -6,6 +6,7 @@ import 'package:ace_routes/core/colors/Constants.dart';
 import 'package:ace_routes/database/Tables/event_table.dart';
 import 'package:ace_routes/view/login_screen.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:pubnub/pubnub.dart';
 import 'package:xml/xml.dart';
 
@@ -176,7 +177,6 @@ class PubNubService extends GetxController {
         XmlDocument.parse(xml); // Validate XML
         EventController().parseXmlResponse(xml);
         Get.find<EventController>().loadEventsFromDatabase();
-
         break;
 
       case '3':
@@ -248,7 +248,16 @@ class PubNubService extends GetxController {
 
         for (final tag in fieldTags) {
           final value = eventElement.getElement(tag)?.text;
-          if (value != null) updatedFields[tag] = value.trim();
+          if (value != null) {
+            String trimmedValue = value.trim();
+
+            // Convert start_date and end_date to local time
+            if (tag == 'start_date' || tag == 'end_date') {
+              trimmedValue = _convertUtcStringToLocal(trimmedValue);
+            }
+
+            updatedFields[tag] = trimmedValue;
+          }
         }
 
         await EventTable.patchEventFields(eventId, updatedFields);
@@ -258,6 +267,29 @@ class PubNubService extends GetxController {
 
       default:
         print("⚠️ Unknown ActionType = $actionType");
+    }
+  }
+
+  String _convertUtcStringToLocal(String raw) {
+    try {
+      // Handle format like "2025/06/20 9:00 -00:00"
+      final parts = raw.split(' ');
+      if (parts.length < 2) return raw;
+
+      final datePart = parts[0].replaceAll('/', '-'); // 2025-06-20
+      final timePart = parts[1];
+
+      final timeSplit = timePart.split(':');
+      final hour = timeSplit[0].padLeft(2, '0');
+      final minute = timeSplit.length > 1 ? timeSplit[1].padLeft(2, '0') : '00';
+
+      final isoString = "$datePart" + "T$hour:$minute:00Z";
+      final localDateTime = DateTime.parse(isoString).toLocal();
+
+      return DateFormat("yyyy-MM-dd HH:mm:ss").format(localDateTime);
+    } catch (e) {
+      print("❌ Failed to convert UTC to local: $raw, Error: $e");
+      return raw;
     }
   }
 

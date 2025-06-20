@@ -159,7 +159,7 @@ class EventController extends GetxController {
       String fromDate = DateFormat('yyyy-MM-dd').format(currentDate);
       String toDate = DateFormat('yyyy-MM-dd').format(secondDate);
 
-      // Get timezone offset in minutes (e.g., +330 for IST)
+      // Get timezone offset in minutes (e.g., +330 for IST, -420 for PDT)
       int tzOffsetMinutes = DateTime.now().timeZoneOffset.inMinutes;
 
       // Compose URL
@@ -168,6 +168,8 @@ class EventController extends GetxController {
           "&action=getorders&tz=$tzOffsetMinutes&from=$fromDate&to=$toDate";
 
       print("🌐 Fetching events: $url");
+      print(
+          "📍 Device TimeZone: ${DateTime.now().timeZoneName}, Offset: $tzOffsetMinutes mins");
 
       var response = await http.get(Uri.parse(url));
 
@@ -190,12 +192,20 @@ class EventController extends GetxController {
       final eventElements = document.findAllElements('event');
 
       List<Event> fetchedEvents = eventElements.map((element) {
+        final rawStartDate = _getText(element, 'start_date');
+        final rawEndDate = _getText(element, 'end_date');
+
+        final localStart = parseUtcDateString(rawStartDate);
+        final localEnd = parseUtcDateString(rawEndDate);
+
+        print("start $localStart end $localEnd");
+
         return Event(
           id: _getText(element, 'id'),
           cid: _getText(element, 'cid'),
-          start_date: _getText(element, 'start_date'),
+          start_date: localStart.toString(), // Local time
           etm: _getText(element, 'etm'),
-          end_date: _getText(element, 'end_date'),
+          end_date: localEnd.toString(), // Local time
           nm: _getText(element, 'nm'),
           wkf: _getText(element, 'wkf'),
           alt: _getText(element, 'alt'),
@@ -252,6 +262,39 @@ class EventController extends GetxController {
     }
   }
 
+// Helper to extract text from XML element
+  String _getText(xml.XmlElement element, String tag) {
+    return element.getElement(tag)?.text ?? '';
+  }
+
+// Helper to parse UTC XML datetime and convert to local
+  DateTime parseUtcDateString(String raw) {
+  try {
+    // Input format: "2025/06/20 08:00 -00:00" or "2025/06/20 8:00 -00:00"
+    final parts = raw.split(' ');
+    if (parts.length < 2) throw FormatException("Invalid format");
+
+    String datePart = parts[0].replaceAll('/', '-'); // 2025-06-20
+    String timePart = parts[1]; // e.g. 8:00 or 08:00
+
+    // Ensure HH:mm format is always 2 digits for hour
+    List<String> timeSplit = timePart.split(':');
+    String hour = timeSplit[0].padLeft(2, '0');
+    String minute = timeSplit[1].padLeft(2, '0');
+
+    // Final ISO string: 2025-06-20T08:00:00Z
+    String isoString = '$datePart' + 'T$hour:$minute:00Z';
+
+    print("✅ ISO formatted: $isoString");
+
+    return DateTime.parse(isoString).toLocal();
+  } catch (e) {
+    print("❌ Failed to parse date: $raw, Error: $e");
+    return DateTime.now();
+  }
+}
+
+
   Future<void> loadEventsFromDatabase() async {
     try {
       isLoading(true);
@@ -278,9 +321,9 @@ class EventController extends GetxController {
     }
   }
 
-  String _getText(xml.XmlElement element, String tagName) {
-    return element.findElements(tagName).isNotEmpty
-        ? element.findElements(tagName).single.text
-        : '';
-  }
+  // String _getText(xml.XmlElement element, String tagName) {
+  //   return element.findElements(tagName).isNotEmpty
+  //       ? element.findElements(tagName).single.text
+  //       : '';
+  // }
 }

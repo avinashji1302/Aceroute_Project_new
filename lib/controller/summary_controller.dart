@@ -47,23 +47,21 @@ class SummaryController extends GetxController {
     if (date == null || date.isEmpty) {
       return "No Time";
     }
-
     try {
-      // Define the expected input format (e.g., "2025/02/03 10:00 -00:00")
-      DateFormat inputFormat = DateFormat("yyyy/MM/dd HH:mm Z");
+      print("Raw date: $date");
 
-      // Parse the date string into a DateTime object
+      DateFormat inputFormat = DateFormat("yyyy-MM-dd HH:mm:ss.SSS");
       DateTime dateTime = inputFormat.parse(date);
 
-      // Format to "MMM dd, yyyy" (e.g., Feb 03, 2025)
-      String formattedDate = DateFormat("MMM dd yyyy").format(dateTime);
-
-      // Format local time (e.g., "1:30 PM")
+      String formattedDate = DateFormat("MMMM dd yyyy").format(dateTime);
       String localTime = DateFormat.jm().format(dateTime.toLocal());
-      startTime.value = localTime;
 
-      return "$formattedDate";
+      startTime.value = localTime;
+      print("Formatted date: $formattedDate, time: $localTime");
+
+      return formattedDate;
     } catch (e) {
+      print("❌ Error formatting date: $e");
       return "Invalid date";
     }
   }
@@ -71,23 +69,17 @@ class SummaryController extends GetxController {
   // Function to calculate the duration between start and end time
   void calculateDuration() {
     try {
-      // Define the input format for startDate and endDate
-      DateFormat inputFormat = DateFormat("yyyy/MM/dd HH:mm Z");
+      DateFormat inputFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
 
-      // Parse the startDate and endDate into DateTime objects
       DateTime start = inputFormat.parse(startDate.value);
       DateTime end = inputFormat.parse(endDate.value);
 
-      // Calculate the duration (difference between end and start)
       Duration difference = end.difference(start);
+      duration.value = "${difference.inMinutes} ";
 
-      // Store the duration in minutes
-      duration.value = difference.inMinutes.toString();
-
-      // Log the duration to ensure it's working
-      print("Duration in minutes: ${duration.value}");
+      print("✅ Duration in minutes: ${duration.value}");
     } catch (e) {
-      print("Error calculating duration: $e");
+      print("❌ Error calculating duration: $e");
     }
   }
 }
