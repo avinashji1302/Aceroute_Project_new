@@ -1,64 +1,58 @@
 import 'package:get/get.dart';
-import 'package:intl/intl.dart'; // For date formatting
-import '../database/Tables/event_table.dart'; // EventTable for DB operations
+import 'package:intl/intl.dart';
+import '../database/Tables/event_table.dart';
 import '../model/event_model.dart';
 
 class SummaryController extends GetxController {
-  // Collecting summary data
   RxString eventId = "".obs;
   RxString nm = "".obs;
   RxString startTime = "".obs;
   RxString category = "".obs;
   RxString duration = "".obs;
+
+  // ✅ Raw DateTime strings for calculation
   RxString startDate = "".obs;
   RxString endDate = "".obs;
 
-  final String id; // Add an id parameter
+  // ✅ Formatted for UI display
+  RxString displayStartDate = "".obs;
 
-  SummaryController(this.id); // Constructor to accept id
+  final String id;
+  SummaryController(this.id);
 
   @override
   void onInit() {
     super.onInit();
     fetchSummaryDetails();
-    print("id is $id");
   }
 
   Future<void> fetchSummaryDetails() async {
-    // This data is coming from event database
     Event? localEvent = await EventTable.fetchEventById(id);
 
     if (localEvent != null) {
       eventId.value = localEvent.id ?? '';
       nm.value = localEvent.nm ?? '';
+
       startDate.value = localEvent.start_date ?? '';
       endDate.value = localEvent.end_date ?? '';
 
-      // Calculate the duration
+      displayStartDate.value = formatEventDate(startDate.value);
       calculateDuration();
-      startDate.value = formatEventDate(startDate.value);
-    } else {
-      print("No event found for the given ID");
     }
   }
 
-  // Function to format the event date and time
+  // ✅ Converts raw string to formatted date and sets startTime
   String formatEventDate(String? date) {
-    if (date == null || date.isEmpty) {
-      return "No Time";
-    }
-    try {
-      print("Raw date: $date");
+    if (date == null || date.isEmpty) return "No Time";
 
+    try {
       DateFormat inputFormat = DateFormat("yyyy-MM-dd HH:mm:ss.SSS");
       DateTime dateTime = inputFormat.parse(date);
 
-      String formattedDate = DateFormat("MMMM dd yyyy").format(dateTime);
+      String formattedDate = DateFormat("MMM dd yyyy").format(dateTime);
       String localTime = DateFormat.jm().format(dateTime.toLocal());
 
       startTime.value = localTime;
-      print("Formatted date: $formattedDate, time: $localTime");
-
       return formattedDate;
     } catch (e) {
       print("❌ Error formatting date: $e");
@@ -66,10 +60,10 @@ class SummaryController extends GetxController {
     }
   }
 
-  // Function to calculate the duration between start and end time
+  // ✅ Use raw dates to calculate duration
   void calculateDuration() {
     try {
-      DateFormat inputFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
+      DateFormat inputFormat = DateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
       DateTime start = inputFormat.parse(startDate.value);
       DateTime end = inputFormat.parse(endDate.value);
@@ -81,5 +75,15 @@ class SummaryController extends GetxController {
     } catch (e) {
       print("❌ Error calculating duration: $e");
     }
+  }
+
+  // ✅ Use this when selecting from date picker (sets raw and display together)
+  void setPickedDate(DateTime date) {
+    DateTime now = DateTime.now();
+    DateTime withTime = DateTime(date.year, date.month, date.day, now.hour, now.minute);
+
+    startDate.value = DateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(withTime);
+    displayStartDate.value = formatEventDate(startDate.value);
+    calculateDuration();
   }
 }

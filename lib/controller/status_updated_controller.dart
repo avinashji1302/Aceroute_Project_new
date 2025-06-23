@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:ace_routes/Widgets/custom_alert_box.dart';
 import 'package:ace_routes/core/colors/Constants.dart';
 import 'package:ace_routes/database/Tables/eform_data_table.dart';
 import 'package:ace_routes/database/Tables/event_table.dart';
@@ -82,50 +83,59 @@ class StatusControllers extends GetxController {
     final datas = await GTypeTable.fetchGTypesContainingCapacity(tid!);
 
     for (var data in datas) {
-  Map<String, dynamic> detailsMap;
-  try {
-    detailsMap = Map<String, dynamic>.from(data.details);
-  } catch (e) {
-    print("❌ Failed to convert details to Map for GType ID: ${data.id} → Error: $e");
-    continue;
-  }
+      Map<String, dynamic> detailsMap;
+      try {
+        detailsMap = Map<String, dynamic>.from(data.details);
+      } catch (e) {
+        print(
+            "❌ Failed to convert details to Map for GType ID: ${data.id} → Error: $e");
+        continue;
+      }
 
-  if (detailsMap['rules'] == null || detailsMap['rules'] is! Map<String, dynamic>) {
-    print("❌ 'rules' key is missing or not a Map in GType ID: ${data.id}");
-    continue;
-  }
+      if (detailsMap['rules'] == null ||
+          detailsMap['rules'] is! Map<String, dynamic>) {
+        print("❌ 'rules' key is missing or not a Map in GType ID: ${data.id}");
+        continue;
+      }
 
-  final rules = detailsMap['rules'] as Map<String, dynamic>;
+      final rules = detailsMap['rules'] as Map<String, dynamic>;
 
-  List<String> statusList = [];
+      List<String> statusList = [];
 
-  if (rules['sts'] is String) {
-    statusList = (rules['sts'] as String).split(',');
-  } else if (rules['sts'] is List) {
-    statusList = (rules['sts'] as List).map((e) => e.toString()).toList();
-  }
+      if (rules['sts'] is String) {
+        statusList = (rules['sts'] as String).split(',');
+      } else if (rules['sts'] is List) {
+        statusList = (rules['sts'] as List).map((e) => e.toString()).toList();
+      }
 
-  print('Count: ${rules['cnt']}');
-  print('Status List: $statusList');
+      print('Count: ${rules['cnt']}');
+      print('Status List: $statusList');
 
-  if (statusList.contains(newWkf)) {
-    print("newKf $newWkf : ");
+      if (statusList.contains(newWkf)) {
+        print("newKf $newWkf : ");
 
-    List<EFormDataModel> formList =
-        await EFormDataTable.getDataGenTypeId(data.id);
+        List<EFormDataModel> formList =
+            await EFormDataTable.getDataGenTypeId(data.id);
 
-    if (formList.isEmpty) {
-      Get.snackbar("Alert", "You could not change the status without adding form");
-      return;
-    } else {
-      print("form is there : ");
+        if (formList.isEmpty) {
+          showDialog(
+            context: Get.context!,
+            builder: (_) => CustomAlertDialog(
+              title: "Oops...",
+              message: "Please fill out the form before proceeding.",
+              buttonText: "Ok",
+            ),
+          );
+          return;
+        } else {
+          print("form is there : ");
+        }
+
+        print("Performing action because status is 4 or 5");
+      } else {
+        print("No action needed");
+      }
     }
-
-    print("Performing action because status is 4 or 5");
-  } else {
-    print("No action needed");
-  }
-}
 
     // ✅ Always update local DB first
     await EventTable.updateOrder(oid, newWkf);

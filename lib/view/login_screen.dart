@@ -1,4 +1,3 @@
-
 import 'package:ace_routes/controller/location/location_permission.dart';
 import 'package:ace_routes/controller/loginController.dart';
 import 'package:flutter/material.dart';
@@ -18,15 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // // Check internet connection on load
-    // loginController.checkInternetConnection();
-    //
-    // // Listen for changes in internet connectivity
-    // Connectivity()
-    //     .onConnectivityChanged
-    //     .listen((List<ConnectivityResult> result) {
-    //   loginController.checkInternetConnection();
-    // });
   }
 
   @override
@@ -34,10 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
     // Initialize the LoginController
     final LoginController loginController = Get.put(LoginController());
 
-    // // Listen for changes in internet connectivity
-    // Connectivity().onConnectivityChanged.listen((result) {
-    //   loginController.checkInternetConnection();
-    // });
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -62,6 +48,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: loginController.accountNameController,
                           onChanged: (value) {
                             loginController.accountName.value = value;
+                            if (value.isNotEmpty) {
+                              loginController.accountNameError.value = "";
+                            }
                           },
                           decoration: InputDecoration(
                             labelText: 'Account Name',
@@ -87,6 +76,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           keyboardType: TextInputType.number,
                           onChanged: (value) {
                             loginController.workerId.value = value;
+                            if (value.isNotEmpty) {
+                              loginController.workerIdError.value = "";
+                            }
                           },
                           decoration: InputDecoration(
                             labelText: 'Worker ID',
@@ -111,6 +103,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: loginController.passController,
                           onChanged: (value) {
                             loginController.password.value = value;
+                            if (value.isNotEmpty) {
+                              loginController.passwordError.value = "";
+                            }
                           },
                           obscureText: !loginController.isPasswordVisible.value,
                           decoration: InputDecoration(

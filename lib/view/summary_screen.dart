@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
 import '../controller/event_controller.dart';
 import '../controller/fontSizeController.dart';
@@ -209,15 +210,15 @@ class SummaryDetails extends StatelessWidget {
                             firstDate: DateTime(2000),
                             lastDate: DateTime(2101),
                           );
+
                           if (pickedDate != null) {
-                            summaryController.startDate.value =
-                                "${pickedDate.toLocal()}".split(' ')[0];
+                            summaryController.setPickedDate(pickedDate);
                           }
                         },
                         child: Text(
-                          summaryController.startDate.value.isEmpty
+                          summaryController.displayStartDate.value.isEmpty
                               ? 'Select Date'
-                              : summaryController.startDate.value,
+                              : summaryController.displayStartDate.value,
                           style: TextStyle(color: Colors.white),
                         ),
                       ),

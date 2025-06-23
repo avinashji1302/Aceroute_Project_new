@@ -4,6 +4,7 @@ import 'package:ace_routes/controller/orderNoteConroller.dart';
 import 'package:ace_routes/controller/vehicle_controller.dart';
 import 'package:ace_routes/core/colors/Constants.dart';
 import 'package:ace_routes/database/Tables/event_table.dart';
+import 'package:ace_routes/utils/TimeZoneUtils.dart';
 import 'package:ace_routes/view/login_screen.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -253,7 +254,7 @@ class PubNubService extends GetxController {
 
             // Convert start_date and end_date to local time
             if (tag == 'start_date' || tag == 'end_date') {
-              trimmedValue = _convertUtcStringToLocal(trimmedValue);
+              trimmedValue = TimeZoneUtils.formatUtcToLocal(trimmedValue);
             }
 
             updatedFields[tag] = trimmedValue;
@@ -270,28 +271,7 @@ class PubNubService extends GetxController {
     }
   }
 
-  String _convertUtcStringToLocal(String raw) {
-    try {
-      // Handle format like "2025/06/20 9:00 -00:00"
-      final parts = raw.split(' ');
-      if (parts.length < 2) return raw;
-
-      final datePart = parts[0].replaceAll('/', '-'); // 2025-06-20
-      final timePart = parts[1];
-
-      final timeSplit = timePart.split(':');
-      final hour = timeSplit[0].padLeft(2, '0');
-      final minute = timeSplit.length > 1 ? timeSplit[1].padLeft(2, '0') : '00';
-
-      final isoString = "$datePart" + "T$hour:$minute:00Z";
-      final localDateTime = DateTime.parse(isoString).toLocal();
-
-      return DateFormat("yyyy-MM-dd HH:mm:ss").format(localDateTime);
-    } catch (e) {
-      print("❌ Failed to convert UTC to local: $raw, Error: $e");
-      return raw;
-    }
-  }
+ 
 
   String? _extractXmlValue(String xml, String tag) {
     final regex = RegExp('<$tag>(.*?)</$tag>', dotAll: true);

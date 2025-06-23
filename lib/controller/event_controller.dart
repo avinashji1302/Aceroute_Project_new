@@ -9,6 +9,7 @@ import 'package:ace_routes/database/Tables/api_data_table.dart';
 import 'package:ace_routes/database/Tables/event_table.dart';
 import 'package:ace_routes/database/Tables/prority_table.dart';
 import 'package:ace_routes/model/login_model/token_api_response.dart';
+import 'package:ace_routes/utils/TimeZoneUtils.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -195,8 +196,8 @@ class EventController extends GetxController {
         final rawStartDate = _getText(element, 'start_date');
         final rawEndDate = _getText(element, 'end_date');
 
-        final localStart = parseUtcDateString(rawStartDate);
-        final localEnd = parseUtcDateString(rawEndDate);
+        final localStart = TimeZoneUtils.parseUtcToLocal(rawStartDate);
+        final localEnd = TimeZoneUtils.parseUtcToLocal(rawEndDate);
 
         print("start $localStart end $localEnd");
 
@@ -266,34 +267,6 @@ class EventController extends GetxController {
   String _getText(xml.XmlElement element, String tag) {
     return element.getElement(tag)?.text ?? '';
   }
-
-// Helper to parse UTC XML datetime and convert to local
-  DateTime parseUtcDateString(String raw) {
-  try {
-    // Input format: "2025/06/20 08:00 -00:00" or "2025/06/20 8:00 -00:00"
-    final parts = raw.split(' ');
-    if (parts.length < 2) throw FormatException("Invalid format");
-
-    String datePart = parts[0].replaceAll('/', '-'); // 2025-06-20
-    String timePart = parts[1]; // e.g. 8:00 or 08:00
-
-    // Ensure HH:mm format is always 2 digits for hour
-    List<String> timeSplit = timePart.split(':');
-    String hour = timeSplit[0].padLeft(2, '0');
-    String minute = timeSplit[1].padLeft(2, '0');
-
-    // Final ISO string: 2025-06-20T08:00:00Z
-    String isoString = '$datePart' + 'T$hour:$minute:00Z';
-
-    print("✅ ISO formatted: $isoString");
-
-    return DateTime.parse(isoString).toLocal();
-  } catch (e) {
-    print("❌ Failed to parse date: $raw, Error: $e");
-    return DateTime.now();
-  }
-}
-
 
   Future<void> loadEventsFromDatabase() async {
     try {
